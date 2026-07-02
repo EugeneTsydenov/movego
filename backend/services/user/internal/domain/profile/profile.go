@@ -9,7 +9,10 @@ import (
 
 const tagUpdateCooldown = 30 * 24 * time.Hour
 
-var ErrTagChangeCooldown = errors.New("profile: tag can only be changed once every 30 days")
+var (
+	ErrTagChangeCooldown = errors.New("profile: tag can only be changed once every 30 days")
+	ErrProfileNotFound = errors.New("profile: not found")
+)
 
 type Profile struct {
 	accountID    uuid.UUID
@@ -96,13 +99,14 @@ func (p *Profile) UpdateDisplayName(name string) error {
 	return nil
 }
 
-func (p *Profile) UpdateAvatarURL(url string) {
+func (p *Profile) UpdateAvatarURL(url string error) {
 	avatarURL, err := newAvatarURL(url)
 	if err != nil {
-		return
+		return err
 	}
 	p.avatarURL = avatarURL
 	p.updatedAt = time.Now().UTC()
+	return nil
 }
 
 func (p *Profile) UpdateCountry(country string) error {

@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	ErrSessionRevoked = errors.New("identity: session revoked")
-	ErrSessionExpired = errors.New("identity: session expired")
+	ErrSessionRevoked  = errors.New("identity: session revoked")
+	ErrSessionExpired  = errors.New("identity: session expired")
+	ErrSessionNotFound = errors.New("identity: session not found")
 )
 
 type Session struct {
@@ -24,7 +25,7 @@ type Session struct {
 	revokedAt *time.Time
 }
 
-func NewSession(accountID uuid.UUID, tokenHash, userAgent, clientIP string, duration time.Duration) (*Session, error) {
+func NewSession(accountID uuid.UUID, tokenHash, userAgent, clientIP string, duration time.Duration) *Session {
 	now := time.Now().UTC()
 	return &Session{
 		id:        uuid.Must(uuid.NewV7()),
@@ -34,7 +35,7 @@ func NewSession(accountID uuid.UUID, tokenHash, userAgent, clientIP string, dura
 		clientIP:  clientIP,
 		createdAt: now,
 		expiresAt: now.Add(duration),
-	}, nil
+	}
 }
 
 func (s *Session) ID() uuid.UUID         { return s.id }
