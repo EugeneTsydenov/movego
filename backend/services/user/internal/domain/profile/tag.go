@@ -13,7 +13,7 @@ var (
 
 type Tag string
 
-func newTag(raw string) (Tag, error) {
+func NewTag(raw string) (Tag, error) {
 	normalized := strings.ToLower(strings.TrimSpace(raw))
 	if !tagPattern.MatchString(normalized) {
 		return "", ErrInvalidTag

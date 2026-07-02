@@ -15,7 +15,7 @@ var (
 
 type DisplayName string
 
-func newDisplayName(raw string) (DisplayName, error) {
+func NewDisplayName(raw string) (DisplayName, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
 		return "", ErrDisplayNameEmpty

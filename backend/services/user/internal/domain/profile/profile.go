@@ -11,7 +11,7 @@ const tagUpdateCooldown = 30 * 24 * time.Hour
 
 var (
 	ErrTagChangeCooldown = errors.New("profile: tag can only be changed once every 30 days")
-	ErrProfileNotFound = errors.New("profile: not found")
+	ErrProfileNotFound   = errors.New("profile: not found")
 )
 
 type Profile struct {
@@ -25,27 +25,7 @@ type Profile struct {
 	updatedAt    time.Time
 }
 
-func New(accountID uuid.UUID, tagStr, displayNameStr, avatarURLStr, country string) (*Profile, error) {
-	tag, err := newTag(tagStr)
-	if err != nil {
-		return nil, err
-	}
-
-	displayName, err := newDisplayName(displayNameStr)
-	if err != nil {
-		return nil, err
-	}
-
-	avatarURL, err := newAvatarURL(avatarURLStr)
-	if err != nil {
-		return nil, err
-	}
-
-	countryCode, err := newCountryCode(country)
-	if err != nil {
-		return nil, err
-	}
-
+func New(accountID uuid.UUID, tag Tag, displayName DisplayName, avatarURL AvatarURL, country CountryCode) *Profile {
 	now := time.Now().UTC()
 	return &Profile{
 		accountID:    accountID,
@@ -53,10 +33,10 @@ func New(accountID uuid.UUID, tagStr, displayNameStr, avatarURLStr, country stri
 		tagUpdatedAt: now,
 		displayName:  displayName,
 		avatarURL:    avatarURL,
-		country:      countryCode,
+		country:      country,
 		createdAt:    now,
 		updatedAt:    now,
-	}, nil
+	}
 }
 
 func (p *Profile) AccountID() uuid.UUID     { return p.accountID }
@@ -72,7 +52,7 @@ func (p *Profile) UpdateTag(tagStr string) error {
 		return ErrTagChangeCooldown
 	}
 
-	tag, err := newTag(tagStr)
+	tag, err := NewTag(tagStr)
 	if err != nil {
 		return err
 	}
@@ -89,7 +69,7 @@ func (p *Profile) CanUpdateTagAt() time.Time {
 }
 
 func (p *Profile) UpdateDisplayName(name string) error {
-	displayName, err := newDisplayName(name)
+	displayName, err := NewDisplayName(name)
 	if err != nil {
 		return err
 	}
@@ -99,8 +79,8 @@ func (p *Profile) UpdateDisplayName(name string) error {
 	return nil
 }
 
-func (p *Profile) UpdateAvatarURL(url string error) {
-	avatarURL, err := newAvatarURL(url)
+func (p *Profile) UpdateAvatarURL(url string) error {
+	avatarURL, err := NewAvatarURL(url)
 	if err != nil {
 		return err
 	}
@@ -110,7 +90,7 @@ func (p *Profile) UpdateAvatarURL(url string error) {
 }
 
 func (p *Profile) UpdateCountry(country string) error {
-	countryCode, err := newCountryCode(country)
+	countryCode, err := NewCountryCode(country)
 	if err != nil {
 		return err
 	}

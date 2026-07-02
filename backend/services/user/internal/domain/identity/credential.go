@@ -23,11 +23,7 @@ type Credential struct {
 	updatedAt    time.Time
 }
 
-func NewCredential(accountID uuid.UUID, emailStr, rawPassword string) (*Credential, error) {
-	email, err := newEmail(emailStr)
-	if err != nil {
-		return nil, err
-	}
+func NewCredential(accountID uuid.UUID, email Email, rawPassword string) (*Credential, error) {
 	if len(rawPassword) < 8 {
 		return nil, ErrWeakPassword
 	}
@@ -35,6 +31,7 @@ func NewCredential(accountID uuid.UUID, emailStr, rawPassword string) (*Credenti
 	if err != nil {
 		return nil, err
 	}
+
 	now := time.Now().UTC()
 	return &Credential{
 		id:           uuid.Must(uuid.NewV7()),

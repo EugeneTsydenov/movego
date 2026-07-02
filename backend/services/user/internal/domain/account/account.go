@@ -39,14 +39,14 @@ type Account struct {
 	createdAt time.Time
 }
 
-func New() (*Account, error) {
+func New() *Account {
 	now := time.Now().UTC()
 	return &Account{
 		id:        uuid.Must(uuid.NewV7()),
 		status:    Active,
 		updatedAt: now,
 		createdAt: now,
-	}, nil
+	}
 }
 
 func (a *Account) ID() uuid.UUID        { return a.id }

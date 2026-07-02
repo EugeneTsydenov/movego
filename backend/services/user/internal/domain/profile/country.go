@@ -9,7 +9,7 @@ var ErrInvalidCountryCode = errors.New("profile: country code must be a 2-letter
 
 type CountryCode string
 
-func newCountryCode(raw string) (CountryCode, error) {
+func NewCountryCode(raw string) (CountryCode, error) {
 	trimmed := strings.ToUpper(strings.TrimSpace(raw))
 	if trimmed == "" {
 		return "", nil

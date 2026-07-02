@@ -9,7 +9,7 @@ var ErrInvalidAvatarURL = errors.New("profile: avatar url must start with http:/
 
 type AvatarURL string
 
-func newAvatarURL(raw string) (AvatarURL, error) {
+func NewAvatarURL(raw string) (AvatarURL, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
 		return "", nil
