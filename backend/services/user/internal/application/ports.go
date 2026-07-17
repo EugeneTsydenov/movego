@@ -2,7 +2,9 @@ package application
 
 import (
 	"context"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/movego/services/user/internal/domain/account"
 	"github.com/movego/services/user/internal/domain/authorization"
 	"github.com/movego/services/user/internal/domain/identity"
@@ -19,4 +21,14 @@ type Repositories struct {
 
 type UOW interface {
 	Do(ctx context.Context, fn func(*Repositories) error) error
+}
+
+type TokenClaims struct {
+	AccountID uuid.UUID
+	Role      string
+}
+
+type TokenIssuer interface {
+	IssueAccessToken(ctx context.Context, claims TokenClaims) (string, time.Time, error)
+	ParseAccessToken(ctx context.Context, token string) (TokenClaims, error)
 }

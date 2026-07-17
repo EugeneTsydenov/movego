@@ -1,6 +1,10 @@
 package identity
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -68,4 +72,17 @@ func (s *Session) Validate() error {
 	}
 
 	return nil
+}
+
+func GenerateRefreshToken() (rawToken string, tokenHash string, err error) {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		return "", "", err
+	}
+	rawToken = base64.RawURLEncoding.EncodeToString(buf)
+
+	hash := sha256.Sum256([]byte(rawToken))
+	tokenHash = hex.EncodeToString(hash[:])
+
+	return rawToken, tokenHash, nil
 }

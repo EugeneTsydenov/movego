@@ -41,8 +41,8 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, cmd RegisterCommand) err
 		return err
 	}
 
-	return uc.uow.Do(ctx, func(repositories *Repositories) error {
-		exist, err := repositories.Credentials.ExistsByEmail(ctx, email)
+	return uc.uow.Do(ctx, func(repos *Repositories) error {
+		exist, err := repos.Credentials.ExistsByEmail(ctx, email)
 		if err != nil {
 			return err
 		}
@@ -60,26 +60,26 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, cmd RegisterCommand) err
 
 		authz := authorization.New(acc.ID())
 
-		tag, err := uc.generateUniqueTag(ctx, repositories, acc.ID())
+		tag, err := uc.generateUniqueTag(ctx, repos, acc.ID())
 		if err != nil {
 			return err
 		}
 
 		prof := profile.New(acc.ID(), tag, displayName, "", "")
 
-		if err = repositories.Accounts.Save(ctx, acc); err != nil {
+		if err = repos.Accounts.Save(ctx, acc); err != nil {
 			return err
 		}
 
-		if err = repositories.Credentials.Save(ctx, credential); err != nil {
+		if err = repos.Credentials.Save(ctx, credential); err != nil {
 			return err
 		}
 
-		if err = repositories.Authorizations.Save(ctx, authz); err != nil {
+		if err = repos.Authorizations.Save(ctx, authz); err != nil {
 			return err
 		}
 
-		if err = repositories.Profiles.Save(ctx, prof); err != nil {
+		if err = repos.Profiles.Save(ctx, prof); err != nil {
 			return err
 		}
 
