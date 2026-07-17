@@ -80,9 +80,11 @@ func GenerateRefreshToken() (rawToken string, tokenHash string, err error) {
 		return "", "", err
 	}
 	rawToken = base64.RawURLEncoding.EncodeToString(buf)
-
-	hash := sha256.Sum256([]byte(rawToken))
-	tokenHash = hex.EncodeToString(hash[:])
-
+	tokenHash = HashRefreshToken(rawToken)
 	return rawToken, tokenHash, nil
+}
+
+func HashRefreshToken(rawToken string) string {
+	hash := sha256.Sum256([]byte(rawToken))
+	return hex.EncodeToString(hash[:])
 }
