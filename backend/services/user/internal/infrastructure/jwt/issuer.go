@@ -2,9 +2,11 @@ package jwt
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/movego/services/user/internal/application"
 )
 
@@ -28,4 +30,35 @@ func (i *Issuer) IssueAccessToken(ctx context.Context, claims application.TokenC
 	return signed, expiresAt, err
 }
 
-func (i *Issuer) ParseAccessToken(ctx context.Context, token string) (application.TokenClaims, error)
+func (i *Issuer) ParseAccessToken(ctx context.Context, tokenStr string) (application.TokenClaims, error) {
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("jwt: unexpected signing method")
+		}
+		return i.secret, nil
+	})
+	if err != nil {
+		return application.TokenClaims{}, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return application.TokenClaims{}, errors.New("jwt: invalid token")
+	}
+
+	sub, ok := claims["sub"].(string)
+	if !ok {
+		return application.TokenClaims{}, errors.New("jwt: missing sub claim")
+	}
+	accountID, err := uuid.Parse(sub)
+	if err != nil {
+		return application.TokenClaims{}, err
+	}
+
+	role, _ := claims["role"].(string)
+
+	return application.TokenClaims{
+		AccountID: accountID,
+		Role:      role,
+	}, nil
+}

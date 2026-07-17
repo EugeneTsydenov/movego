@@ -2,9 +2,10 @@ package application
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/movego/services/user/internal/domain/account"
 	"github.com/movego/services/user/internal/domain/authorization"
 	"github.com/movego/services/user/internal/domain/identity"
@@ -60,7 +61,7 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, cmd RegisterCommand) err
 
 		authz := authorization.New(acc.ID())
 
-		tag, err := uc.generateUniqueTag(ctx, repos, acc.ID())
+		tag, err := uc.generateUniqueTag(ctx, repos)
 		if err != nil {
 			return err
 		}
@@ -87,10 +88,22 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, cmd RegisterCommand) err
 	})
 }
 
-func (uc *RegisterUseCase) generateUniqueTag(ctx context.Context, repos *Repositories, accountID uuid.UUID) (profile.Tag, error) {
+func randomHex(n int) (string, error) {
+	buf := make([]byte, n)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(buf), nil
+}
+
+func (uc *RegisterUseCase) generateUniqueTag(ctx context.Context, repos *Repositories) (profile.Tag, error) {
 	const maxAttempts = 5
 	for i := 0; i < maxAttempts; i++ {
-		candidate := "player_" + accountID.String()[:8]
+		suffix, err := randomHex(4)
+		if err != nil {
+			return "", err
+		}
+		candidate := "player_" + suffix
 		tag, err := profile.NewTag(candidate)
 		if err != nil {
 			continue

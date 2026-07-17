@@ -7,7 +7,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrCannotDemoteLastAdmin = errors.New("authorization: cannot demote the last admin")
+var (
+	ErrCannotDemoteLastAdmin = errors.New("authorization: cannot demote the last admin")
+	ErrAuthorizationNotFound = errors.New("authorization: not found")
+)
 
 type Role string
 
