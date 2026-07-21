@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/movego/services/user/internal/application"
+	"github.com/movego/services/user/internal/usecase"
 )
 
 type Issuer struct {
@@ -19,7 +19,7 @@ func NewIssuer(secret []byte, ttl time.Duration) *Issuer {
 	return &Issuer{secret, ttl}
 }
 
-func (i *Issuer) IssueAccessToken(ctx context.Context, claims application.TokenClaims) (string, time.Time, error) {
+func (i *Issuer) IssueAccessToken(ctx context.Context, claims usecase.TokenClaims) (string, time.Time, error) {
 	expiresAt := time.Now().UTC().Add(i.ttl)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":  claims.AccountID.String(),
@@ -30,7 +30,7 @@ func (i *Issuer) IssueAccessToken(ctx context.Context, claims application.TokenC
 	return signed, expiresAt, err
 }
 
-func (i *Issuer) ParseAccessToken(ctx context.Context, tokenStr string) (application.TokenClaims, error) {
+func (i *Issuer) ParseAccessToken(ctx context.Context, tokenStr string) (usecase.TokenClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("jwt: unexpected signing method")
@@ -38,26 +38,26 @@ func (i *Issuer) ParseAccessToken(ctx context.Context, tokenStr string) (applica
 		return i.secret, nil
 	})
 	if err != nil {
-		return application.TokenClaims{}, err
+		return usecase.TokenClaims{}, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return application.TokenClaims{}, errors.New("jwt: invalid token")
+		return usecase.TokenClaims{}, errors.New("jwt: invalid token")
 	}
 
 	sub, ok := claims["sub"].(string)
 	if !ok {
-		return application.TokenClaims{}, errors.New("jwt: missing sub claim")
+		return usecase.TokenClaims{}, errors.New("jwt: missing sub claim")
 	}
 	accountID, err := uuid.Parse(sub)
 	if err != nil {
-		return application.TokenClaims{}, err
+		return usecase.TokenClaims{}, err
 	}
 
 	role, _ := claims["role"].(string)
 
-	return application.TokenClaims{
+	return usecase.TokenClaims{
 		AccountID: accountID,
 		Role:      role,
 	}, nil

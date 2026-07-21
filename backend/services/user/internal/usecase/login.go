@@ -1,4 +1,4 @@
-package application
+package usecase
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/movego/services/user/internal/domain/identity"
 )
 
-var ErrInvalidCredentials = errors.New("application: invalid email or password")
+var ErrInvalidCredentials = errors.New("usecase: invalid email or password")
 
 const refreshTokenTTL = 30 * 24 * time.Hour
 

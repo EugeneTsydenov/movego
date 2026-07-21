@@ -1,4 +1,4 @@
-package application
+package usecase
 
 import (
 	"context"
@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	ErrEmailAlreadyTaken   = errors.New("application: email already taken")
-	ErrTagGenerationFailed = errors.New("application: failed to generate unique tag after multiple attempts")
+	ErrEmailAlreadyTaken   = errors.New("usecase: email already taken")
+	ErrTagGenerationFailed = errors.New("usecase: failed to generate unique tag after multiple attempts")
 )
 
 type RegisterCommand struct {

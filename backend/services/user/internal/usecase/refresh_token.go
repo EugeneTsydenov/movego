@@ -1,4 +1,4 @@
-package application
+package usecase
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrAccountInactive     = errors.New("application: account is inactive")
-	ErrInvalidRefreshToken = errors.New("application: invalid or expired refresh token")
+	ErrAccountInactive     = errors.New("usecase: account is inactive")
+	ErrInvalidRefreshToken = errors.New("usecase: invalid or expired refresh token")
 )
 
 type RefreshTokenCommand struct {
