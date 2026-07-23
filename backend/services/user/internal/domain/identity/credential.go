@@ -45,7 +45,7 @@ func NewCredential(accountID uuid.UUID, email Email, rawPassword string) (*Crede
 
 func (c *Credential) ID() uuid.UUID        { return c.id }
 func (c *Credential) AccountID() uuid.UUID { return c.accountID }
-func (c *Credential) Email() string        { return c.email.String() }
+func (c *Credential) Email() Email         { return c.email }
 func (c *Credential) PasswordHash() string { return c.passwordHash }
 func (c *Credential) CreatedAt() time.Time { return c.createdAt }
 func (c *Credential) UpdatedAt() time.Time { return c.updatedAt }

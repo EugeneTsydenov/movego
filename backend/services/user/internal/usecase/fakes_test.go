@@ -96,7 +96,7 @@ func (r *fakeCredentialRepo) FindByEmail(ctx context.Context, email identity.Ema
 		return nil, r.findByEmailErr
 	}
 	for _, c := range r.saved {
-		if c.Email() == email.String() {
+		if c.Email() == email {
 			return c, nil
 		}
 	}

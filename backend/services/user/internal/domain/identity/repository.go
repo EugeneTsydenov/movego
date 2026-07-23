@@ -18,6 +18,4 @@ type SessionRepository interface {
 	Save(ctx context.Context, s *Session) error
 	FindByTokenHash(ctx context.Context, tokenHash string) (*Session, error)
 	FindAllByAccountID(ctx context.Context, accountID uuid.UUID) ([]*Session, error)
-	RevokeByID(ctx context.Context, id uuid.UUID) error
-	RevokeAllByAccountID(ctx context.Context, accountID uuid.UUID) error
 }
