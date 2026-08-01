@@ -10,11 +10,12 @@ import (
 	"github.com/movego/services/user/internal/domain/authorization"
 	"github.com/movego/services/user/internal/domain/identity"
 	"github.com/movego/services/user/internal/domain/profile"
+	"github.com/movego/shared/validation"
 )
 
 var (
-	ErrEmailAlreadyTaken   = errors.New("usecase: email already taken")
-	ErrTagGenerationFailed = errors.New("usecase: failed to generate unique tag after multiple attempts")
+	ErrEmailAlreadyTaken   = errors.New("email already taken")
+	ErrTagGenerationFailed = errors.New("failed to generate unique tag after multiple attempts")
 )
 
 type RegisterCommand struct {
@@ -24,22 +25,34 @@ type RegisterCommand struct {
 }
 
 type RegisterUseCase struct {
-	uow UOW
+	uow            UOW
+	passwordHasher PasswordHasher
 }
 
-func NewRegisterUseCase(uow UOW) *RegisterUseCase {
-	return &RegisterUseCase{uow: uow}
+func NewRegisterUseCase(uow UOW, passwordHasher PasswordHasher) *RegisterUseCase {
+	return &RegisterUseCase{uow, passwordHasher}
 }
 
 func (uc *RegisterUseCase) Execute(ctx context.Context, cmd RegisterCommand) error {
+	valErrs := validation.New()
+
 	email, err := identity.NewEmail(cmd.Email)
 	if err != nil {
-		return err
+		valErrs.Add(err)
+	}
+
+	err = identity.ValidatePassword(cmd.Password)
+	if err != nil {
+		valErrs.Add(err)
 	}
 
 	displayName, err := profile.NewDisplayName(cmd.DisplayName)
 	if err != nil {
-		return err
+		valErrs.Add(err)
+	}
+
+	if valErrs.HasErrors() {
+		return valErrs
 	}
 
 	return uc.uow.Do(ctx, func(repos *Repositories) error {
@@ -54,7 +67,12 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, cmd RegisterCommand) err
 
 		acc := account.New()
 
-		credential, err := identity.NewCredential(acc.ID(), email, cmd.Password)
+		hashPassword, err := uc.passwordHasher.Hash(cmd.Password)
+		if err != nil {
+			return err
+		}
+
+		credential := identity.NewCredential(acc.ID(), email, hashPassword)
 		if err != nil {
 			return err
 		}

@@ -1,15 +1,13 @@
 package identity
 
 import (
-	"errors"
 	"net/mail"
 	"strings"
+
+	"github.com/movego/services/user/internal/domain"
 )
 
-var (
-	ErrInvalidEmail = errors.New("identity: invalid email format")
-)
-
+// Value object
 type Email string
 
 func (e Email) String() string {
@@ -20,7 +18,7 @@ func NewEmail(v string) (Email, error) {
 	trimmed := strings.TrimSpace(v)
 	addr, err := mail.ParseAddress(trimmed)
 	if err != nil {
-		return "", ErrInvalidEmail
+		return "", domain.NewInvalidInput("credential.invalid_email", "invalid email")
 	}
 
 	return Email(strings.ToLower(addr.Address)), nil

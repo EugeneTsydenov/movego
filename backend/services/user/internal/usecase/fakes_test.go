@@ -338,6 +338,36 @@ func (i *fakeTokenIssuer) ParseAccessToken(ctx context.Context, token string) (T
 	return i.parseClaims, nil
 }
 
+type fakePasswordHasher struct {
+	hashErr     error
+	verifyErr   error
+	lastHash    string
+	lastRaw     string
+	hashCalls   int
+	verifyCalls int
+}
+
+func newFakePasswordHasher() *fakePasswordHasher {
+	return &fakePasswordHasher{}
+}
+
+func (h *fakePasswordHasher) Hash(raw string) (string, error) {
+	h.hashCalls++
+	h.lastRaw = raw
+	if h.hashErr != nil {
+		return "", h.hashErr
+	}
+	h.lastHash = "hashed:" + raw
+	return h.lastHash, nil
+}
+
+func (h *fakePasswordHasher) Verify(hash, raw string) error {
+	h.verifyCalls++
+	h.lastHash = hash
+	h.lastRaw = raw
+	return h.verifyErr
+}
+
 func newFakeRepositories() *Repositories {
 	return &Repositories{
 		Accounts:       newFakeAccountRepo(),

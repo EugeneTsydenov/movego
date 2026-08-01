@@ -18,15 +18,14 @@ func seedCredential(t *testing.T, rawPassword string) (*account.Account, *identi
 	acc := account.New()
 	email, err := identity.NewEmail("player@example.com")
 	require.NoError(t, err)
-	cred, err := identity.NewCredential(acc.ID(), email, rawPassword)
-	require.NoError(t, err)
-	return acc, cred
+	return acc, identity.NewCredential(acc.ID(), email, "hashed:"+rawPassword)
 }
 
 func TestLoginUseCase_InvalidEmail(t *testing.T) {
 	credentials := newFakeCredentialRepo()
 	sessions := newFakeSessionRepo()
-	uc := NewLoginUseCase(credentials, newFakeAuthorizationRepo(), sessions, &fakeTokenIssuer{})
+	hasher := newFakePasswordHasher()
+	uc := NewLoginUseCase(credentials, newFakeAuthorizationRepo(), sessions, &fakeTokenIssuer{}, hasher)
 
 	_, err := uc.Execute(context.Background(), LoginCommand{
 		Email:    "invalid",
@@ -36,6 +35,7 @@ func TestLoginUseCase_InvalidEmail(t *testing.T) {
 	assert.ErrorIs(t, err, ErrInvalidCredentials)
 	assert.Equal(t, 0, credentials.findByEmailCalls)
 	assert.Empty(t, sessions.saved)
+	assert.Equal(t, 0, hasher.verifyCalls)
 }
 
 func TestLoginUseCase_WrongPassword(t *testing.T) {
@@ -47,7 +47,9 @@ func TestLoginUseCase_WrongPassword(t *testing.T) {
 	authzRepo := newFakeAuthorizationRepo()
 	require.NoError(t, authzRepo.Save(ctx, authorization.New(acc.ID())))
 	sessions := newFakeSessionRepo()
-	uc := NewLoginUseCase(credentials, authzRepo, sessions, &fakeTokenIssuer{})
+	hasher := newFakePasswordHasher()
+	hasher.verifyErr = errors.New("mismatch")
+	uc := NewLoginUseCase(credentials, authzRepo, sessions, &fakeTokenIssuer{}, hasher)
 
 	_, err := uc.Execute(ctx, LoginCommand{
 		Email:    "player@example.com",
@@ -56,13 +58,15 @@ func TestLoginUseCase_WrongPassword(t *testing.T) {
 
 	assert.ErrorIs(t, err, ErrInvalidCredentials)
 	assert.Empty(t, sessions.saved)
+	assert.Equal(t, cred.PasswordHash(), hasher.lastHash)
+	assert.Equal(t, "wrong password", hasher.lastRaw)
 }
 
 func TestLoginUseCase_RepositoryError(t *testing.T) {
 	credentials := newFakeCredentialRepo()
 	credentials.findByEmailErr = errors.New("db temporary failure")
 	sessions := newFakeSessionRepo()
-	uc := NewLoginUseCase(credentials, newFakeAuthorizationRepo(), sessions, &fakeTokenIssuer{})
+	uc := NewLoginUseCase(credentials, newFakeAuthorizationRepo(), sessions, &fakeTokenIssuer{}, newFakePasswordHasher())
 
 	_, err := uc.Execute(context.Background(), LoginCommand{
 		Email:    "player@example.com",
@@ -92,7 +96,8 @@ func TestLoginUseCase_Success_IssuesTokenAndPersistsSessionHashOnly(t *testing.T
 		accessToken: "access token",
 		expiresAt:   expectedExpiry,
 	}
-	uc := NewLoginUseCase(credentials, authzRepo, sessions, issuer)
+	hasher := newFakePasswordHasher()
+	uc := NewLoginUseCase(credentials, authzRepo, sessions, issuer, hasher)
 
 	result, err := uc.Execute(ctx, LoginCommand{
 		Email:     "player@example.com",
@@ -108,6 +113,9 @@ func TestLoginUseCase_Success_IssuesTokenAndPersistsSessionHashOnly(t *testing.T
 	assert.NotEmpty(t, result.RefreshToken)
 	assert.Equal(t, acc.ID(), issuer.lastClaims.AccountID)
 	assert.Equal(t, authorization.RoleAdmin.String(), issuer.lastClaims.Role)
+	assert.Equal(t, cred.PasswordHash(), hasher.lastHash)
+	assert.Equal(t, "strongpassword123", hasher.lastRaw)
+	assert.Equal(t, 1, hasher.verifyCalls)
 
 	var persisted *identity.Session
 	for _, s := range sessions.saved {

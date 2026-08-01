@@ -9,8 +9,8 @@ import (
 const maxDisplayNameLength = 32
 
 var (
-	ErrDisplayNameEmpty   = errors.New("profile: display name cannot be empty")
-	ErrDisplayNameTooLong = errors.New("profile: display name too long")
+	ErrDisplayNameEmpty   = errors.New("display name cannot be empty")
+	ErrDisplayNameTooLong = errors.New("display name too long")
 )
 
 type DisplayName string

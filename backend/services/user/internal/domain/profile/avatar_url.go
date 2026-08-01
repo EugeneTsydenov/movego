@@ -1,11 +1,10 @@
 package profile
 
 import (
-	"errors"
 	"strings"
-)
 
-var ErrInvalidAvatarURL = errors.New("profile: avatar url must start with http:// or https://")
+	"github.com/movego/services/user/internal/domain"
+)
 
 type AvatarURL string
 
@@ -15,7 +14,7 @@ func NewAvatarURL(raw string) (AvatarURL, error) {
 		return "", nil
 	}
 	if !strings.HasPrefix(trimmed, "http://") && !strings.HasPrefix(trimmed, "https://") {
-		return "", ErrInvalidAvatarURL
+		return "", domain.NewInvalidInput("profile.invalid_avatar_url", "invalid avatar url")
 	}
 	return AvatarURL(trimmed), nil
 }

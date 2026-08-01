@@ -9,7 +9,7 @@ import (
 	"github.com/movego/services/user/internal/domain/identity"
 )
 
-var ErrInvalidCredentials = errors.New("usecase: invalid email or password")
+var ErrInvalidCredentials = errors.New("invalid email or password")
 
 const refreshTokenTTL = 30 * 24 * time.Hour
 
@@ -31,6 +31,7 @@ type LoginUseCase struct {
 	authorizations authorization.Repository
 	sessions       identity.SessionRepository
 	tokenIssuer    TokenIssuer
+	passwordHasher PasswordHasher
 }
 
 func NewLoginUseCase(
@@ -38,12 +39,14 @@ func NewLoginUseCase(
 	authorizations authorization.Repository,
 	sessions identity.SessionRepository,
 	tokenIssuer TokenIssuer,
+	passwordHasher PasswordHasher,
 ) *LoginUseCase {
 	return &LoginUseCase{
 		credentials:    credentials,
 		authorizations: authorizations,
 		sessions:       sessions,
 		tokenIssuer:    tokenIssuer,
+		passwordHasher: passwordHasher,
 	}
 }
 
@@ -61,7 +64,7 @@ func (uc *LoginUseCase) Execute(ctx context.Context, cmd LoginCommand) (LoginRes
 		return LoginResult{}, err
 	}
 
-	if err := credential.VerifyPassword(cmd.Password); err != nil {
+	if err := uc.passwordHasher.Verify(credential.PasswordHash(), cmd.Password); err != nil {
 		return LoginResult{}, ErrInvalidCredentials
 	}
 

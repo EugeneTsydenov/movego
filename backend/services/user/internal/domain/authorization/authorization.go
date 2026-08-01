@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrCannotDemoteLastAdmin = errors.New("authorization: cannot demote the last admin")
-	ErrAuthorizationNotFound = errors.New("authorization: not found")
+	ErrCannotDemoteLastAdmin = errors.New("cannot demote the last admin")
+	ErrAuthorizationNotFound = errors.New("authorization not found")
 )
 
 type Role string

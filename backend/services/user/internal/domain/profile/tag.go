@@ -8,7 +8,7 @@ import (
 
 var (
 	tagPattern    = regexp.MustCompile(`^[a-z0-9_]{3,20}$`)
-	ErrInvalidTag = errors.New("profile: tag must be 3-20 chars, lowercase letters/digits/underscore")
+	ErrInvalidTag = errors.New("tag must be 3-20 chars, lowercase letters/digits/underscore")
 )
 
 type Tag string

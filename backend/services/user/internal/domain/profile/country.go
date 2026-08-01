@@ -1,11 +1,12 @@
 package profile
 
 import (
-	"errors"
 	"strings"
+
+	"github.com/movego/services/user/internal/domain"
 )
 
-var ErrInvalidCountryCode = errors.New("profile: country code must be a 2-letter ISO code")
+var ErrInvalidCountryCode = domain.NewInvalidInput("profile.invalid_country_code", "invalid country code")
 
 type CountryCode string
 

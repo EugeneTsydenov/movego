@@ -10,8 +10,8 @@ import (
 const tagUpdateCooldown = 30 * 24 * time.Hour
 
 var (
-	ErrTagChangeCooldown = errors.New("profile: tag can only be changed once every 30 days")
-	ErrProfileNotFound   = errors.New("profile: not found")
+	ErrTagChangeCooldown = errors.New("tag can only be changed once every 30 days")
+	ErrProfileNotFound   = errors.New("profile not found")
 )
 
 type Profile struct {

@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ErrAlreadyDeleted  = errors.New("account: already deleted")
-	ErrAccountNotFound = errors.New("account: not found")
+	ErrAlreadyDeleted  = errors.New("account already deleted")
+	ErrAccountNotFound = errors.New("account not found")
 )
 
 type Status int

@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrAccountInactive     = errors.New("usecase: account is inactive")
-	ErrInvalidRefreshToken = errors.New("usecase: invalid or expired refresh token")
+	ErrAccountInactive     = errors.New("account is inactive")
+	ErrInvalidRefreshToken = errors.New("invalid or expired refresh token")
 )
 
 type RefreshTokenCommand struct {

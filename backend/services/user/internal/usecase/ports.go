@@ -32,3 +32,8 @@ type TokenIssuer interface {
 	IssueAccessToken(ctx context.Context, claims TokenClaims) (string, time.Time, error)
 	ParseAccessToken(ctx context.Context, token string) (TokenClaims, error)
 }
+
+type PasswordHasher interface {
+	Hash(raw string) (string, error)
+	Verify(hash, raw string) error
+}

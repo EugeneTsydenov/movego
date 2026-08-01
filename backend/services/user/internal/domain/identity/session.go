@@ -5,16 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
-)
-
-var (
-	ErrSessionRevoked  = errors.New("identity: session revoked")
-	ErrSessionExpired  = errors.New("identity: session expired")
-	ErrSessionNotFound = errors.New("identity: session not found")
+	"github.com/movego/services/user/internal/domain"
 )
 
 type Session struct {
@@ -64,11 +58,11 @@ func (s *Session) Revoke() {
 
 func (s *Session) Validate() error {
 	if s.isRevoked {
-		return ErrSessionRevoked
+		return domain.NewUnauthenticated("credential.session_revoked", "session revoked")
 	}
 
 	if time.Now().UTC().After(s.expiresAt) {
-		return ErrSessionExpired
+		return domain.NewUnauthenticated("credential.session_expired", "session expired")
 	}
 
 	return nil
