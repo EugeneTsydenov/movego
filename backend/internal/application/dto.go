@@ -1,0 +1,36 @@
+package application
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type UserDTO struct {
+	ID          uuid.UUID
+	Tag         string
+	Email       string
+	DisplayName string
+	Role        string
+	UpdatedAt   time.Time
+	CreatedAt   time.Time
+}
+
+type SignUpInput struct {
+	Email     string
+	Password  string
+	UserAgent string
+	ClientIP  string
+}
+
+type SignUpOutput struct {
+	User         UserDTO
+	AccessToken  string
+	RefreshToken string
+}
+
+type SignInInput struct {
+}
+
+type SignInOutput struct {
+}

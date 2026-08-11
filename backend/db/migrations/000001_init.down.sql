@@ -1,0 +1,8 @@
+DROP INDEX IF EXISTS sessions_expires_at_idx;
+DROP INDEX IF EXISTS sessions_user_id_idx;
+DROP INDEX IF EXISTS credentials_provider_key_uq;
+DROP INDEX IF EXISTS credentials_provider_user_id_uq;
+
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS credentials;
+DROP TABLE IF EXISTS users;

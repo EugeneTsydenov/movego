@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  gen-proto:
+    desc: Generate Go code from protobuf files
+    cmd: buf generate
+  push-proto:
+    desc: Push proto files to buf registry
+    cmds:
+      - buf lint
+      - buf push

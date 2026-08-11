@@ -1,0 +1,24 @@
+app:
+  log_level: "warn"
+
+database:
+  host: "localhost"
+  port: 5432
+  name: "movego_dev"
+  user: "postgres"
+  driver: "postgres"
+  ssl_mode: "require"
+  max_conn: 25
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  read_timeout: "5s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "15s"
+
+jwt:
+  access_ttl: "15m"
+  refresh_ttl: "720h"
+  issuer: "movego"

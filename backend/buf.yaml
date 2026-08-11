@@ -1,0 +1,10 @@
+version: v2
+modules:
+  - path: api/proto
+    name: buf.build/movego/proto
+lint:
+  use:
+    - STANDARD
+
+deps:
+  - buf.build/bufbuild/protovalidate
