@@ -11,8 +11,9 @@ import (
 
 type Config struct {
 	App struct {
-		Name     string `mapstructure:"name"`
-		LogLevel string `mapstructure:"log_level"`
+		Name            string        `mapstructure:"name"`
+		ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
+		LogLevel        string        `mapstructure:"log_level"`
 	} `mapstructure:"app"`
 
 	Database struct {

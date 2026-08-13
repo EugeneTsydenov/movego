@@ -6,8 +6,8 @@ import (
 	"log"
 	"movego/internal/config"
 	"os"
-
-	"go.opentelemetry.io/otel"
+	"os/signal"
+	"syscall"
 )
 
 func fetchConfigDir(prefix string) string {
@@ -37,16 +37,25 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	app, err := newApp(context.TODO(), cfg, env)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	app, err := newApp(ctx, cfg, env)
 	if err != nil {
 		log.Fatalf("failed to init app: %v", err)
 	}
 
-	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
-		log.Printf("[OTEL ERROR] %v", err)
-	}))
+	go func() {
+		if err := app.Run(); err != nil {
+			app.Logger.Error("grpc server runtime error", "error", err)
+			stop()
+		}
+	}()
 
-	if err := app.Run(); err != nil {
-		log.Fatalf("failed to run grpc server: %v", err)
-	}
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.App.ShutdownTimeout)
+	defer cancel()
+
+	app.Stop(shutdownCtx)
 }

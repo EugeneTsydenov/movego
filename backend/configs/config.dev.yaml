@@ -1,5 +1,6 @@
 app:
   name: "movego-backend"
+  shutdown_timeout: "15s"
   log_level: "debug"
 
 database:
