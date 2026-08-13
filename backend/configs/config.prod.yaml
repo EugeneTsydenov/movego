@@ -1,8 +1,9 @@
 app:
+  name: "movego-backend"
   log_level: "warn"
 
 database:
-  host: "localhost"
+  host: "postgres"
   port: 5432
   name: "movego_dev"
   user: "postgres"
@@ -22,3 +23,7 @@ jwt:
   access_ttl: "15m"
   refresh_ttl: "720h"
   issuer: "movego"
+
+otel:
+  endpoint: "loki:4317"
+  metrics_port: 2112

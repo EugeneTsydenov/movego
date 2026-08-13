@@ -6,6 +6,8 @@ import (
 	"log"
 	"movego/internal/config"
 	"os"
+
+	"go.opentelemetry.io/otel"
 )
 
 func fetchConfigDir(prefix string) string {
@@ -29,12 +31,21 @@ func fetchConfigDir(prefix string) string {
 func main() {
 	prefix := "MOVEGO"
 	configDir := fetchConfigDir(prefix)
-	cfg, err := config.Load(configDir, os.Getenv("APP_ENV"), prefix)
+	env := os.Getenv("APP_ENV")
+	cfg, err := config.Load(configDir, env, prefix)
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	app, err := newApp(context.TODO(), cfg)
+	app, err := newApp(context.TODO(), cfg, env)
+	if err != nil {
+		log.Fatalf("failed to init app: %v", err)
+	}
+
+	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
+		log.Printf("[OTEL ERROR] %v", err)
+	}))
+
 	if err := app.Run(); err != nil {
 		log.Fatalf("failed to run grpc server: %v", err)
 	}

@@ -1,0 +1,14 @@
+[
+  {
+    "email": "user1@gmail.com",
+    "password": "Lmessi212_",
+    "user_agent": "agent1",
+    "client_ip": "127.0.0.1"
+  },
+  {
+    "email": "user2@gmail.com",
+    "password": "Lmessi212_",
+    "user_agent": "agent2",
+    "client_ip": "127.0.0.1"
+  }
+]

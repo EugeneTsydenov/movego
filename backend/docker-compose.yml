@@ -7,16 +7,15 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+      - "2112:2112"
     environment:
       - APP_ENV=dev
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres_dev_pass
-      - DB_NAME=movego_dev
+      - MOVEGO_DATABASE_PASSWORD=postgres
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - app-network
 
   postgres:
     image: postgres:16-alpine
@@ -35,11 +34,77 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - shared-infra
+      app-network:
+        aliases:
+          - postgres
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: monitoring_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    depends_on:
+      - tempo
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: monitoring_tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "3200:3200"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: monitoring_loki
+    command: [ "-config.file=/etc/loki.yaml" ]
+    volumes:
+      - ./loki.yaml:/etc/loki.yaml
+    ports:
+      - "3100:3100"
+    networks:
+      - app-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: monitoring_prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: monitoring_promtail
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - app-network
 
 volumes:
   pgdata_dev:
 
 networks:
-  shared-infra:
-    external: true
+  app-network:
+    name: app-network

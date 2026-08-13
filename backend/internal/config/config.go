@@ -11,6 +11,7 @@ import (
 
 type Config struct {
 	App struct {
+		Name     string `mapstructure:"name"`
 		LogLevel string `mapstructure:"log_level"`
 	} `mapstructure:"app"`
 
@@ -39,6 +40,11 @@ type Config struct {
 		AccessTTL  time.Duration `mapstructure:"access_ttl"`
 		Issuer     string        `mapstructure:"issuer"`
 	} `mapstructure:"jwt"`
+
+	Otel struct {
+		Endpoint    string `mapstructure:"endpoint"`
+		MetricsPort int    `mapstructure:"metrics_port"`
+	} `mapstructure:"otel"`
 }
 
 func Load(configDir, appEnv, prefix string) (*Config, error) {
