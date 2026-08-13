@@ -25,12 +25,10 @@ func ErrorHInterceptor() grpc.UnaryServerInterceptor {
 			return resp, nil
 		}
 
-		if err != nil {
-			span := trace.SpanFromContext(ctx)
-			if span.IsRecording() {
-				span.RecordError(err)
-				span.SetStatus(otelcodes.Error, err.Error())
-			}
+		span := trace.SpanFromContext(ctx)
+		if span.IsRecording() {
+			span.RecordError(err)
+			span.SetStatus(otelcodes.Error, err.Error())
 		}
 
 		if _, ok := status.FromError(err); ok {
