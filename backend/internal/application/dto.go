@@ -50,3 +50,9 @@ type RefreshOutput struct {
 	AccessToken  string
 	RefreshToken string
 }
+
+type SignOutInput struct {
+	RefreshToken string
+}
+
+type SignOutOutput struct{}

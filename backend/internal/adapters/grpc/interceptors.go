@@ -45,15 +45,29 @@ func LoggingInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		resp, err := handler(ctx, req)
 		if err != nil {
-			log.WarnContext(ctx, "grpc request failed",
-				slog.String("method", info.FullMethod),
-				slog.String("error", err.Error()),
-			)
-		} else {
-			log.InfoContext(ctx, "grpc request success",
-				slog.String("method", info.FullMethod),
-			)
+			st, _ := status.FromError(err)
+
+			switch st.Code() {
+			case codes.InvalidArgument, codes.Unauthenticated, codes.NotFound, codes.AlreadyExists, codes.PermissionDenied:
+				log.InfoContext(ctx, "grpc business error",
+					slog.String("method", info.FullMethod),
+					slog.String("code", st.Code().String()),
+					slog.String("error", err.Error()),
+				)
+			default:
+				log.ErrorContext(ctx, "system error",
+					slog.String("method", info.FullMethod),
+					slog.String("code", st.Code().String()),
+					slog.String("error", err.Error()),
+				)
+			}
+
+			return resp, err
 		}
+
+		log.InfoContext(ctx, "grpc request success",
+			slog.String("method", info.FullMethod),
+		)
 		return resp, err
 	}
 }

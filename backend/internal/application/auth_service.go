@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"movego/internal/domain"
 	"movego/internal/pkg/secret"
 	"strings"
@@ -17,6 +18,8 @@ type AuthService struct {
 	sessionRepo    domain.SessionRepo
 	tokenIssuer    TokenIssuer
 	refreshTTL     time.Duration
+
+	logger *slog.Logger
 }
 
 func NewAuthService(
@@ -25,6 +28,7 @@ func NewAuthService(
 	sessionRepo domain.SessionRepo,
 	tokenIssuer TokenIssuer,
 	refreshTTL time.Duration,
+	logger *slog.Logger,
 ) *AuthService {
 	return &AuthService{
 		uow:            uow,
@@ -32,6 +36,7 @@ func NewAuthService(
 		sessionRepo:    sessionRepo,
 		tokenIssuer:    tokenIssuer,
 		refreshTTL:     refreshTTL,
+		logger:         logger,
 	}
 }
 
@@ -222,4 +227,28 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (RefreshOutp
 		AccessToken:  token,
 		RefreshToken: session.ID().String() + "." + secr,
 	}, nil
+}
+
+func (s *AuthService) SignOut(ctx context.Context, in SignOutInput) error {
+	parts := strings.SplitN(in.RefreshToken, ".", 2)
+	if len(parts) != 2 {
+		return nil
+	}
+	sessionIDStr := parts[0]
+
+	sessionID, err := uuid.Parse(sessionIDStr)
+	if err != nil {
+		return nil
+	}
+
+	err = s.sessionRepo.Delete(ctx, sessionID)
+	if err != nil {
+		s.logger.WarnContext(ctx, "failed to delete session from db during sign out",
+			slog.String("session_id", sessionID.String()),
+			slog.String("error", err.Error()),
+		)
+		return nil
+	}
+
+	return nil
 }

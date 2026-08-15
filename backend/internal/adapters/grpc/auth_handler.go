@@ -4,12 +4,15 @@ import (
 	"context"
 	movegov1 "movego/gen/go/movego/v1"
 	"movego/internal/application"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type AuthService interface {
 	SignUp(ctx context.Context, in application.SignUpInput) (application.SignUpOutput, error)
 	SignIn(ctx context.Context, in application.SignInInput) (application.SignInOutput, error)
 	Refresh(ctx context.Context, in application.RefreshInput) (application.RefreshOutput, error)
+	SignOut(ctx context.Context, in application.SignOutInput) error
 }
 
 type AuthHandler struct {
@@ -45,4 +48,12 @@ func (h *AuthHandler) Refresh(ctx context.Context, req *movegov1.RefreshRequest)
 		return nil, err
 	}
 	return toRefreshResponse(out), err
+}
+
+func (h *AuthHandler) SignOut(ctx context.Context, req *movegov1.SignOutRequest) (*emptypb.Empty, error) {
+	err := h.authService.SignOut(ctx, toSignOutInput(req))
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }

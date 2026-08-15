@@ -100,7 +100,14 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	credentialRepo := postgres.NewCredentialRepo(querier)
 	sessionRepo := postgres.NewSessionRepo(querier)
 	tokenIssuer := jwt.NewIssuer([]byte(os.Getenv("MOVEGO_JWT_SECRET_KEY")), cfg.JWT.AccessTTL, cfg.JWT.Issuer)
-	authServer := application.NewAuthService(unitOfWork, credentialRepo, sessionRepo, tokenIssuer, cfg.JWT.RefreshTTL)
+	authServer := application.NewAuthService(
+		unitOfWork,
+		credentialRepo,
+		sessionRepo,
+		tokenIssuer,
+		cfg.JWT.RefreshTTL,
+		appLogger,
+	)
 	authHandler := grpcadapter.NewAuthHandler(authServer)
 
 	movegov1.RegisterAuthServiceServer(grpcServer, authHandler)

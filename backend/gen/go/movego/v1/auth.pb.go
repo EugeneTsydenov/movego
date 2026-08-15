@@ -10,6 +10,7 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -374,11 +375,55 @@ func (x *RefreshResponse) GetRefreshToken() string {
 	return ""
 }
 
+type SignOutRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignOutRequest) Reset() {
+	*x = SignOutRequest{}
+	mi := &file_movego_v1_auth_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignOutRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignOutRequest) ProtoMessage() {}
+
+func (x *SignOutRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_movego_v1_auth_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignOutRequest.ProtoReflect.Descriptor instead.
+func (*SignOutRequest) Descriptor() ([]byte, []int) {
+	return file_movego_v1_auth_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SignOutRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
 var File_movego_v1_auth_proto protoreflect.FileDescriptor
 
 const file_movego_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x14movego/v1/auth.proto\x12\tmovego.v1\x1a\x14movego/v1/user.proto\x1a\x1bbuf/validate/validate.proto\"\x94\x01\n" +
+	"\x14movego/v1/auth.proto\x12\tmovego.v1\x1a\x14movego/v1/user.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x94\x01\n" +
 	"\rSignUpRequest\x12 \n" +
 	"\x05email\x18\x01 \x01(\tB\n" +
 	"\xbaH\ar\x05\x18\xff\x01`\x01R\x05email\x12%\n" +
@@ -405,11 +450,14 @@ const file_movego_v1_auth_proto_rawDesc = "" +
 	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"Y\n" +
 	"\x0fRefreshResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2\xcd\x01\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"5\n" +
+	"\x0eSignOutRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken2\x8b\x02\n" +
 	"\vAuthService\x12=\n" +
 	"\x06SignUp\x12\x18.movego.v1.SignUpRequest\x1a\x19.movego.v1.SignUpResponse\x12=\n" +
 	"\x06SignIn\x12\x18.movego.v1.SignInRequest\x1a\x19.movego.v1.SignInResponse\x12@\n" +
-	"\aRefresh\x12\x19.movego.v1.RefreshRequest\x1a\x1a.movego.v1.RefreshResponseB\"Z movego/gen/go/movego/v1;movegov1b\x06proto3"
+	"\aRefresh\x12\x19.movego.v1.RefreshRequest\x1a\x1a.movego.v1.RefreshResponse\x12<\n" +
+	"\aSignOut\x12\x19.movego.v1.SignOutRequest\x1a\x16.google.protobuf.EmptyB\"Z movego/gen/go/movego/v1;movegov1b\x06proto3"
 
 var (
 	file_movego_v1_auth_proto_rawDescOnce sync.Once
@@ -423,7 +471,7 @@ func file_movego_v1_auth_proto_rawDescGZIP() []byte {
 	return file_movego_v1_auth_proto_rawDescData
 }
 
-var file_movego_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_movego_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_movego_v1_auth_proto_goTypes = []any{
 	(*SignUpRequest)(nil),   // 0: movego.v1.SignUpRequest
 	(*SignUpResponse)(nil),  // 1: movego.v1.SignUpResponse
@@ -431,19 +479,23 @@ var file_movego_v1_auth_proto_goTypes = []any{
 	(*SignInResponse)(nil),  // 3: movego.v1.SignInResponse
 	(*RefreshRequest)(nil),  // 4: movego.v1.RefreshRequest
 	(*RefreshResponse)(nil), // 5: movego.v1.RefreshResponse
-	(*User)(nil),            // 6: movego.v1.User
+	(*SignOutRequest)(nil),  // 6: movego.v1.SignOutRequest
+	(*User)(nil),            // 7: movego.v1.User
+	(*emptypb.Empty)(nil),   // 8: google.protobuf.Empty
 }
 var file_movego_v1_auth_proto_depIdxs = []int32{
-	6, // 0: movego.v1.SignUpResponse.user:type_name -> movego.v1.User
-	6, // 1: movego.v1.SignInResponse.user:type_name -> movego.v1.User
+	7, // 0: movego.v1.SignUpResponse.user:type_name -> movego.v1.User
+	7, // 1: movego.v1.SignInResponse.user:type_name -> movego.v1.User
 	0, // 2: movego.v1.AuthService.SignUp:input_type -> movego.v1.SignUpRequest
 	2, // 3: movego.v1.AuthService.SignIn:input_type -> movego.v1.SignInRequest
 	4, // 4: movego.v1.AuthService.Refresh:input_type -> movego.v1.RefreshRequest
-	1, // 5: movego.v1.AuthService.SignUp:output_type -> movego.v1.SignUpResponse
-	3, // 6: movego.v1.AuthService.SignIn:output_type -> movego.v1.SignInResponse
-	5, // 7: movego.v1.AuthService.Refresh:output_type -> movego.v1.RefreshResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
+	6, // 5: movego.v1.AuthService.SignOut:input_type -> movego.v1.SignOutRequest
+	1, // 6: movego.v1.AuthService.SignUp:output_type -> movego.v1.SignUpResponse
+	3, // 7: movego.v1.AuthService.SignIn:output_type -> movego.v1.SignInResponse
+	5, // 8: movego.v1.AuthService.Refresh:output_type -> movego.v1.RefreshResponse
+	8, // 9: movego.v1.AuthService.SignOut:output_type -> google.protobuf.Empty
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
@@ -461,7 +513,7 @@ func file_movego_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_movego_v1_auth_proto_rawDesc), len(file_movego_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

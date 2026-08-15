@@ -55,6 +55,12 @@ func toRefreshResponse(out application.RefreshOutput) *movegov1.RefreshResponse 
 	}
 }
 
+func toSignOutInput(req *movegov1.SignOutRequest) application.SignOutInput {
+	return application.SignOutInput{
+		RefreshToken: req.GetRefreshToken(),
+	}
+}
+
 func toProtoUser(dto application.UserDTO) *movegov1.User {
 	return &movegov1.User{
 		Id:          dto.ID.String(),
