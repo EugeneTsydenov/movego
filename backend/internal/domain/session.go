@@ -29,6 +29,26 @@ func NewSession(userID uuid.UUID, secretHash string, userAgent, clientIP string,
 	}
 }
 
+func RestoreSession(
+	id uuid.UUID,
+	userID uuid.UUID,
+	secretHash string,
+	userAgent string,
+	clientIP string,
+	expiresAt time.Time,
+	createdAt time.Time,
+) *Session {
+	return &Session{
+		id:         id,
+		userID:     userID,
+		secretHash: secretHash,
+		userAgent:  userAgent,
+		clientIP:   clientIP,
+		expiresAt:  expiresAt,
+		createdAt:  createdAt,
+	}
+}
+
 func (s *Session) ID() uuid.UUID        { return s.id }
 func (s *Session) UserID() uuid.UUID    { return s.userID }
 func (s *Session) SecretHash() string   { return s.secretHash }

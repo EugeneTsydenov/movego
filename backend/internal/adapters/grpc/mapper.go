@@ -42,6 +42,19 @@ func toSignInResponse(out application.SignInOutput) *movegov1.SignInResponse {
 	}
 }
 
+func toRefreshInput(req *movegov1.RefreshRequest) application.RefreshInput {
+	return application.RefreshInput{
+		RefreshToken: req.GetRefreshToken(),
+	}
+}
+
+func toRefreshResponse(out application.RefreshOutput) *movegov1.RefreshResponse {
+	return &movegov1.RefreshResponse{
+		AccessToken:  out.AccessToken,
+		RefreshToken: out.RefreshToken,
+	}
+}
+
 func toProtoUser(dto application.UserDTO) *movegov1.User {
 	return &movegov1.User{
 		Id:          dto.ID.String(),

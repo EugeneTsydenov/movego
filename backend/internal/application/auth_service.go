@@ -5,7 +5,10 @@ import (
 	"errors"
 	"movego/internal/domain"
 	"movego/internal/pkg/secret"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type AuthService struct {
@@ -156,6 +159,66 @@ func (s *AuthService) SignIn(ctx context.Context, in SignInInput) (SignInOutput,
 			UpdatedAt:   user.UpdatedAt(),
 			CreatedAt:   user.CreatedAt(),
 		},
+		AccessToken:  token,
+		RefreshToken: session.ID().String() + "." + secr,
+	}, nil
+}
+
+func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (RefreshOutput, error) {
+	parts := strings.SplitN(in.RefreshToken, ".", 2)
+	if len(parts) != 2 {
+		return RefreshOutput{}, domain.ErrInvalidCredentials
+	}
+	sessionIDStr := parts[0]
+	secrStr := parts[1]
+	sessionID, err := uuid.Parse(sessionIDStr)
+	if err != nil {
+		return RefreshOutput{}, domain.ErrInvalidCredentials
+	}
+
+	oldSession, user, err := s.sessionRepo.FindValid(ctx, sessionID)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return RefreshOutput{}, domain.ErrInvalidCredentials
+		}
+
+		return RefreshOutput{}, err
+	}
+
+	if !secret.ValidateToken(secrStr, oldSession.SecretHash()) {
+		return RefreshOutput{}, domain.ErrInvalidCredentials
+	}
+
+	secr, err := secret.GenerateToken()
+	if err != nil {
+		return RefreshOutput{}, err
+	}
+
+	var session *domain.Session
+	err = s.uow.Do(ctx, func(repos domain.Repos) error {
+		err := repos.Sessions().Delete(ctx, oldSession.ID())
+		if err != nil {
+			return err
+		}
+		session = domain.NewSession(user.ID(), secret.HashToken(secr), oldSession.UserAgent(), oldSession.ClientIP(), s.refreshTTL)
+		if err = repos.Sessions().Save(ctx, session); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return RefreshOutput{}, err
+	}
+
+	token, err := s.tokenIssuer.Issue(TokenClaims{
+		Sub:   user.ID(),
+		Roles: []string{user.Role().String()},
+	})
+	if err != nil {
+		return RefreshOutput{}, err
+	}
+
+	return RefreshOutput{
 		AccessToken:  token,
 		RefreshToken: session.ID().String() + "." + secr,
 	}, nil

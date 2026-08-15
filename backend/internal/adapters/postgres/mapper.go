@@ -144,3 +144,48 @@ func toDomainFindForAuthRow(row sqlc.FindForAuthRow) (*domain.User, *domain.Cred
 
 	return user, credential, nil
 }
+
+func toDomainFindValidRow(row sqlc.FindValidRow) (*domain.Session, *domain.User, error) {
+	email, err := domain.NewEmail(row.Users.Email)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map email: %v", err)
+	}
+
+	tag, err := domain.NewTag(row.Users.Tag)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map tag: %v", err)
+	}
+
+	displayName, err := domain.NewDisplayName(row.Users.DisplayName)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map display name: %v", err)
+	}
+
+	role, err := domain.NewRole(row.Users.Role)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map role: %v", err)
+	}
+
+	user := domain.RestoreUser(
+		row.Users.ID,
+		email,
+		tag,
+		displayName,
+		role,
+		row.Users.CreatedAt,
+		row.Users.UpdatedAt,
+		fromPgTimestampzPtr(row.Users.DeletedAt),
+	)
+
+	session := domain.RestoreSession(
+		row.Sessions.ID,
+		row.Sessions.UserID,
+		row.Sessions.SecretHash,
+		row.Sessions.UserAgent,
+		row.Sessions.ClientIp,
+		row.Sessions.ExpiresAt,
+		row.Sessions.CreatedAt,
+	)
+
+	return session, user, nil
+}

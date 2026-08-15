@@ -10,6 +10,7 @@ import "buf/validate/validate.proto";
 service AuthService {
   rpc SignUp(SignUpRequest) returns (SignUpResponse);
   rpc SignIn(SignInRequest) returns (SignInResponse);
+  rpc Refresh(RefreshRequest) returns (RefreshResponse);
 }
 
 message SignUpRequest {
@@ -48,4 +49,13 @@ message SignInResponse {
     User user = 1;
     string access_token = 2;
     string refresh_token = 3;
+}
+
+message RefreshRequest {
+    string refresh_token = 1;
+}
+
+message RefreshResponse {
+    string access_token = 1;
+    string refresh_token = 2;
 }

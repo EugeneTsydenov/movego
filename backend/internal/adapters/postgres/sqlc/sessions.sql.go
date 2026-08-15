@@ -12,6 +12,55 @@ import (
 	"github.com/google/uuid"
 )
 
+const delete = `-- name: Delete :exec
+DELETE FROM sessions
+WHERE id = $1
+`
+
+func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, delete, id)
+	return err
+}
+
+const findValid = `-- name: FindValid :one
+SELECT
+    s.id, s.user_id, s.secret_hash, s.user_agent, s.client_ip, s.expires_at, s.created_at,
+    u.id, u.email, u.tag, u.display_name, u.role, u.created_at, u.updated_at, u.deleted_at
+FROM sessions s
+INNER JOIN users u ON u.id = s.user_id
+WHERE s.id = $1
+  AND s.expires_at > now()
+  AND u.deleted_at IS NULL
+`
+
+type FindValidRow struct {
+	Sessions Sessions `json:"sessions"`
+	Users    Users    `json:"users"`
+}
+
+func (q *Queries) FindValid(ctx context.Context, id uuid.UUID) (FindValidRow, error) {
+	row := q.db.QueryRow(ctx, findValid, id)
+	var i FindValidRow
+	err := row.Scan(
+		&i.Sessions.ID,
+		&i.Sessions.UserID,
+		&i.Sessions.SecretHash,
+		&i.Sessions.UserAgent,
+		&i.Sessions.ClientIp,
+		&i.Sessions.ExpiresAt,
+		&i.Sessions.CreatedAt,
+		&i.Users.ID,
+		&i.Users.Email,
+		&i.Users.Tag,
+		&i.Users.DisplayName,
+		&i.Users.Role,
+		&i.Users.CreatedAt,
+		&i.Users.UpdatedAt,
+		&i.Users.DeletedAt,
+	)
+	return i, err
+}
+
 const saveSession = `-- name: SaveSession :exec
 INSERT INTO sessions (
     id,

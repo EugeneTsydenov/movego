@@ -2,8 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"movego/internal/adapters/postgres/sqlc"
 	"movego/internal/domain"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 var _ domain.SessionRepo = (*SessionRepo)(nil)
@@ -21,4 +25,20 @@ func NewSessionRepo(querier sqlc.Querier) *SessionRepo {
 func (r *SessionRepo) Save(ctx context.Context, session *domain.Session) error {
 	err := r.querier.SaveSession(ctx, toSaveSessionsParams(session))
 	return mapSessionError(err)
+}
+
+func (r *SessionRepo) FindValid(ctx context.Context, sessionID uuid.UUID) (*domain.Session, *domain.User, error) {
+	row, err := r.querier.FindValid(ctx, sessionID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, domain.ErrNotFound
+		}
+		return nil, nil, err
+	}
+
+	return toDomainFindValidRow(row)
+}
+
+func (r *SessionRepo) Delete(ctx context.Context, sessionID uuid.UUID) error {
+	return r.querier.Delete(ctx, sessionID)
 }

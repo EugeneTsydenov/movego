@@ -1,6 +1,10 @@
 package domain
 
-import "context"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type UserRepo interface {
 	Save(ctx context.Context, user *User) error
@@ -13,6 +17,8 @@ type CredentialRepo interface {
 
 type SessionRepo interface {
 	Save(ctx context.Context, session *Session) error
+	FindValid(ctx context.Context, id uuid.UUID) (*Session, *User, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type Repos interface {

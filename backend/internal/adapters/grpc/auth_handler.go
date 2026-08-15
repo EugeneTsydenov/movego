@@ -9,6 +9,7 @@ import (
 type AuthService interface {
 	SignUp(ctx context.Context, in application.SignUpInput) (application.SignUpOutput, error)
 	SignIn(ctx context.Context, in application.SignInInput) (application.SignInOutput, error)
+	Refresh(ctx context.Context, in application.RefreshInput) (application.RefreshOutput, error)
 }
 
 type AuthHandler struct {
@@ -36,4 +37,12 @@ func (h *AuthHandler) SignIn(ctx context.Context, req *movegov1.SignInRequest) (
 		return nil, err
 	}
 	return toSignInResponse(out), err
+}
+
+func (h *AuthHandler) Refresh(ctx context.Context, req *movegov1.RefreshRequest) (*movegov1.RefreshResponse, error) {
+	out, err := h.authService.Refresh(ctx, toRefreshInput(req))
+	if err != nil {
+		return nil, err
+	}
+	return toRefreshResponse(out), err
 }

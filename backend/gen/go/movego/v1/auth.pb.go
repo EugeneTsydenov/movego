@@ -278,6 +278,102 @@ func (x *SignInResponse) GetRefreshToken() string {
 	return ""
 }
 
+type RefreshRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshRequest) Reset() {
+	*x = RefreshRequest{}
+	mi := &file_movego_v1_auth_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshRequest) ProtoMessage() {}
+
+func (x *RefreshRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_movego_v1_auth_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshRequest.ProtoReflect.Descriptor instead.
+func (*RefreshRequest) Descriptor() ([]byte, []int) {
+	return file_movego_v1_auth_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *RefreshRequest) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+type RefreshResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshResponse) Reset() {
+	*x = RefreshResponse{}
+	mi := &file_movego_v1_auth_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshResponse) ProtoMessage() {}
+
+func (x *RefreshResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_movego_v1_auth_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshResponse.ProtoReflect.Descriptor instead.
+func (*RefreshResponse) Descriptor() ([]byte, []int) {
+	return file_movego_v1_auth_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RefreshResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *RefreshResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
 var File_movego_v1_auth_proto protoreflect.FileDescriptor
 
 const file_movego_v1_auth_proto_rawDesc = "" +
@@ -304,10 +400,16 @@ const file_movego_v1_auth_proto_rawDesc = "" +
 	"\x0eSignInResponse\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.movego.v1.UserR\x04user\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken2\x8b\x01\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\"5\n" +
+	"\x0eRefreshRequest\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"Y\n" +
+	"\x0fRefreshResponse\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2\xcd\x01\n" +
 	"\vAuthService\x12=\n" +
 	"\x06SignUp\x12\x18.movego.v1.SignUpRequest\x1a\x19.movego.v1.SignUpResponse\x12=\n" +
-	"\x06SignIn\x12\x18.movego.v1.SignInRequest\x1a\x19.movego.v1.SignInResponseB\"Z movego/gen/go/movego/v1;movegov1b\x06proto3"
+	"\x06SignIn\x12\x18.movego.v1.SignInRequest\x1a\x19.movego.v1.SignInResponse\x12@\n" +
+	"\aRefresh\x12\x19.movego.v1.RefreshRequest\x1a\x1a.movego.v1.RefreshResponseB\"Z movego/gen/go/movego/v1;movegov1b\x06proto3"
 
 var (
 	file_movego_v1_auth_proto_rawDescOnce sync.Once
@@ -321,23 +423,27 @@ func file_movego_v1_auth_proto_rawDescGZIP() []byte {
 	return file_movego_v1_auth_proto_rawDescData
 }
 
-var file_movego_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_movego_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_movego_v1_auth_proto_goTypes = []any{
-	(*SignUpRequest)(nil),  // 0: movego.v1.SignUpRequest
-	(*SignUpResponse)(nil), // 1: movego.v1.SignUpResponse
-	(*SignInRequest)(nil),  // 2: movego.v1.SignInRequest
-	(*SignInResponse)(nil), // 3: movego.v1.SignInResponse
-	(*User)(nil),           // 4: movego.v1.User
+	(*SignUpRequest)(nil),   // 0: movego.v1.SignUpRequest
+	(*SignUpResponse)(nil),  // 1: movego.v1.SignUpResponse
+	(*SignInRequest)(nil),   // 2: movego.v1.SignInRequest
+	(*SignInResponse)(nil),  // 3: movego.v1.SignInResponse
+	(*RefreshRequest)(nil),  // 4: movego.v1.RefreshRequest
+	(*RefreshResponse)(nil), // 5: movego.v1.RefreshResponse
+	(*User)(nil),            // 6: movego.v1.User
 }
 var file_movego_v1_auth_proto_depIdxs = []int32{
-	4, // 0: movego.v1.SignUpResponse.user:type_name -> movego.v1.User
-	4, // 1: movego.v1.SignInResponse.user:type_name -> movego.v1.User
+	6, // 0: movego.v1.SignUpResponse.user:type_name -> movego.v1.User
+	6, // 1: movego.v1.SignInResponse.user:type_name -> movego.v1.User
 	0, // 2: movego.v1.AuthService.SignUp:input_type -> movego.v1.SignUpRequest
 	2, // 3: movego.v1.AuthService.SignIn:input_type -> movego.v1.SignInRequest
-	1, // 4: movego.v1.AuthService.SignUp:output_type -> movego.v1.SignUpResponse
-	3, // 5: movego.v1.AuthService.SignIn:output_type -> movego.v1.SignInResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
+	4, // 4: movego.v1.AuthService.Refresh:input_type -> movego.v1.RefreshRequest
+	1, // 5: movego.v1.AuthService.SignUp:output_type -> movego.v1.SignUpResponse
+	3, // 6: movego.v1.AuthService.SignIn:output_type -> movego.v1.SignInResponse
+	5, // 7: movego.v1.AuthService.Refresh:output_type -> movego.v1.RefreshResponse
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
@@ -355,7 +461,7 @@ func file_movego_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_movego_v1_auth_proto_rawDesc), len(file_movego_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
