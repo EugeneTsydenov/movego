@@ -5,34 +5,37 @@
 package sqlc
 
 import (
+	"time"
+
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Credentials struct {
-	ID           pgtype.UUID `json:"id"`
-	UserID       pgtype.UUID `json:"user_id"`
+	ID           uuid.UUID   `json:"id"`
+	UserID       uuid.UUID   `json:"user_id"`
 	PasswordHash pgtype.Text `json:"password_hash"`
 	Provider     string      `json:"provider"`
 	ProviderKey  pgtype.Text `json:"provider_key"`
 }
 
 type Sessions struct {
-	ID         pgtype.UUID        `json:"id"`
-	UserID     pgtype.UUID        `json:"user_id"`
-	SecretHash string             `json:"secret_hash"`
-	UserAgent  string             `json:"user_agent"`
-	ClientIp   string             `json:"client_ip"`
-	ExpiresAt  pgtype.Timestamptz `json:"expires_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ID         uuid.UUID `json:"id"`
+	UserID     uuid.UUID `json:"user_id"`
+	SecretHash string    `json:"secret_hash"`
+	UserAgent  string    `json:"user_agent"`
+	ClientIp   string    `json:"client_ip"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 type Users struct {
-	ID          pgtype.UUID        `json:"id"`
+	ID          uuid.UUID          `json:"id"`
 	Email       string             `json:"email"`
 	Tag         string             `json:"tag"`
 	DisplayName string             `json:"display_name"`
 	Role        string             `json:"role"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
 	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }

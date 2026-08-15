@@ -7,12 +7,12 @@
 package movegov1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -150,23 +150,164 @@ func (x *SignUpResponse) GetRefreshToken() string {
 	return ""
 }
 
+type SignInRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	UserAgent     string                 `protobuf:"bytes,3,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	ClientIp      string                 `protobuf:"bytes,4,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignInRequest) Reset() {
+	*x = SignInRequest{}
+	mi := &file_movego_v1_auth_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignInRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignInRequest) ProtoMessage() {}
+
+func (x *SignInRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_movego_v1_auth_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignInRequest.ProtoReflect.Descriptor instead.
+func (*SignInRequest) Descriptor() ([]byte, []int) {
+	return file_movego_v1_auth_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *SignInRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *SignInRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *SignInRequest) GetUserAgent() string {
+	if x != nil {
+		return x.UserAgent
+	}
+	return ""
+}
+
+func (x *SignInRequest) GetClientIp() string {
+	if x != nil {
+		return x.ClientIp
+	}
+	return ""
+}
+
+type SignInResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignInResponse) Reset() {
+	*x = SignInResponse{}
+	mi := &file_movego_v1_auth_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignInResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignInResponse) ProtoMessage() {}
+
+func (x *SignInResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_movego_v1_auth_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignInResponse.ProtoReflect.Descriptor instead.
+func (*SignInResponse) Descriptor() ([]byte, []int) {
+	return file_movego_v1_auth_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SignInResponse) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+func (x *SignInResponse) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *SignInResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
 var File_movego_v1_auth_proto protoreflect.FileDescriptor
 
 const file_movego_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x14movego/v1/auth.proto\x12\tmovego.v1\x1a\x14movego/v1/user.proto\"}\n" +
-	"\rSignUpRequest\x12\x14\n" +
-	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x1d\n" +
+	"\x14movego/v1/auth.proto\x12\tmovego.v1\x1a\x14movego/v1/user.proto\x1a\x1bbuf/validate/validate.proto\"\x94\x01\n" +
+	"\rSignUpRequest\x12 \n" +
+	"\x05email\x18\x01 \x01(\tB\n" +
+	"\xbaH\ar\x05\x18\xff\x01`\x01R\x05email\x12%\n" +
+	"\bpassword\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18HR\bpassword\x12\x1d\n" +
 	"\n" +
 	"user_agent\x18\x03 \x01(\tR\tuserAgent\x12\x1b\n" +
 	"\tclient_ip\x18\x04 \x01(\tR\bclientIp\"}\n" +
 	"\x0eSignUpResponse\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.movego.v1.UserR\x04user\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken2L\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\"\x94\x01\n" +
+	"\rSignInRequest\x12 \n" +
+	"\x05email\x18\x01 \x01(\tB\n" +
+	"\xbaH\ar\x05\x18\xff\x01`\x01R\x05email\x12%\n" +
+	"\bpassword\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18HR\bpassword\x12\x1d\n" +
+	"\n" +
+	"user_agent\x18\x03 \x01(\tR\tuserAgent\x12\x1b\n" +
+	"\tclient_ip\x18\x04 \x01(\tR\bclientIp\"}\n" +
+	"\x0eSignInResponse\x12#\n" +
+	"\x04user\x18\x01 \x01(\v2\x0f.movego.v1.UserR\x04user\x12!\n" +
+	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken2\x8b\x01\n" +
 	"\vAuthService\x12=\n" +
-	"\x06SignUp\x12\x18.movego.v1.SignUpRequest\x1a\x19.movego.v1.SignUpResponseB\"Z movego/gen/go/movego/v1;movegov1b\x06proto3"
+	"\x06SignUp\x12\x18.movego.v1.SignUpRequest\x1a\x19.movego.v1.SignUpResponse\x12=\n" +
+	"\x06SignIn\x12\x18.movego.v1.SignInRequest\x1a\x19.movego.v1.SignInResponseB\"Z movego/gen/go/movego/v1;movegov1b\x06proto3"
 
 var (
 	file_movego_v1_auth_proto_rawDescOnce sync.Once
@@ -180,21 +321,26 @@ func file_movego_v1_auth_proto_rawDescGZIP() []byte {
 	return file_movego_v1_auth_proto_rawDescData
 }
 
-var file_movego_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_movego_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_movego_v1_auth_proto_goTypes = []any{
 	(*SignUpRequest)(nil),  // 0: movego.v1.SignUpRequest
 	(*SignUpResponse)(nil), // 1: movego.v1.SignUpResponse
-	(*User)(nil),           // 2: movego.v1.User
+	(*SignInRequest)(nil),  // 2: movego.v1.SignInRequest
+	(*SignInResponse)(nil), // 3: movego.v1.SignInResponse
+	(*User)(nil),           // 4: movego.v1.User
 }
 var file_movego_v1_auth_proto_depIdxs = []int32{
-	2, // 0: movego.v1.SignUpResponse.user:type_name -> movego.v1.User
-	0, // 1: movego.v1.AuthService.SignUp:input_type -> movego.v1.SignUpRequest
-	1, // 2: movego.v1.AuthService.SignUp:output_type -> movego.v1.SignUpResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	4, // 0: movego.v1.SignUpResponse.user:type_name -> movego.v1.User
+	4, // 1: movego.v1.SignInResponse.user:type_name -> movego.v1.User
+	0, // 2: movego.v1.AuthService.SignUp:input_type -> movego.v1.SignUpRequest
+	2, // 3: movego.v1.AuthService.SignIn:input_type -> movego.v1.SignInRequest
+	1, // 4: movego.v1.AuthService.SignUp:output_type -> movego.v1.SignUpResponse
+	3, // 5: movego.v1.AuthService.SignIn:output_type -> movego.v1.SignInResponse
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_movego_v1_auth_proto_init() }
@@ -209,7 +355,7 @@ func file_movego_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_movego_v1_auth_proto_rawDesc), len(file_movego_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

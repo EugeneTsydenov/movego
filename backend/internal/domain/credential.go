@@ -53,6 +53,22 @@ func NewOAuthCredential(userID uuid.UUID, provider Provider, providerKey string)
 	}
 }
 
+func RestoreCredential(
+	id uuid.UUID,
+	userID uuid.UUID,
+	provider Provider,
+	passwordHash *string,
+	providerKey *string,
+) *Credential {
+	return &Credential{
+		id:           id,
+		userID:       userID,
+		passwordHash: passwordHash,
+		provider:     provider,
+		providerKey:  providerKey,
+	}
+}
+
 func (c *Credential) ID() uuid.UUID {
 	return c.id
 }

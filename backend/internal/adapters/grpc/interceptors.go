@@ -4,16 +4,18 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"movego/internal/domain"
 
+	"buf.build/go/protovalidate"
 	otelcodes "go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
-	grpccodes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
-func ErrorHInterceptor() grpc.UnaryServerInterceptor {
+func ErrorInterceptor() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req any,
@@ -35,16 +37,7 @@ func ErrorHInterceptor() grpc.UnaryServerInterceptor {
 			return nil, err
 		}
 
-		switch {
-		case errors.Is(err, domain.ErrNotFound):
-			return nil, status.Error(grpccodes.NotFound, err.Error())
-		case errors.Is(err, domain.ErrAlreadyExists):
-			return nil, status.Error(grpccodes.AlreadyExists, err.Error())
-		case errors.Is(err, domain.ErrValidation):
-			return nil, status.Error(grpccodes.InvalidArgument, err.Error())
-		}
-
-		return nil, status.Error(grpccodes.Internal, "internal server error")
+		return nil, mapDomainErrorToGRPC(err)
 	}
 }
 
@@ -62,5 +55,33 @@ func LoggingInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 			)
 		}
 		return resp, err
+	}
+}
+
+func ValidationUnaryInterceptor(v protovalidate.Validator) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		if msg, ok := req.(proto.Message); ok {
+			if err := v.Validate(msg); err != nil {
+				var valErr *protovalidate.ValidationError
+				if errors.As(err, &valErr) {
+					br := &errdetails.BadRequest{}
+
+					for _, violation := range valErr.Violations {
+						br.FieldViolations = append(br.FieldViolations, &errdetails.BadRequest_FieldViolation{
+							Field:       string(violation.FieldDescriptor.Name()),
+							Description: violation.String(),
+						})
+					}
+
+					st := status.New(codes.InvalidArgument, err.Error())
+					stWithDetails, _ := st.WithDetails(br)
+					return nil, stWithDetails.Err()
+				}
+
+				return nil, status.Error(codes.InvalidArgument, err.Error())
+			}
+		}
+
+		return handler(ctx, req)
 	}
 }

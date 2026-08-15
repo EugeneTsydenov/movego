@@ -7,8 +7,9 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 const saveSession = `-- name: SaveSession :exec
@@ -31,13 +32,13 @@ ON CONFLICT (id) DO UPDATE SET
 `
 
 type SaveSessionParams struct {
-	ID         pgtype.UUID        `json:"id"`
-	UserID     pgtype.UUID        `json:"user_id"`
-	SecretHash string             `json:"secret_hash"`
-	UserAgent  string             `json:"user_agent"`
-	ClientIp   string             `json:"client_ip"`
-	ExpiresAt  pgtype.Timestamptz `json:"expires_at"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ID         uuid.UUID `json:"id"`
+	UserID     uuid.UUID `json:"user_id"`
+	SecretHash string    `json:"secret_hash"`
+	UserAgent  string    `json:"user_agent"`
+	ClientIp   string    `json:"client_ip"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 func (q *Queries) SaveSession(ctx context.Context, arg SaveSessionParams) error {

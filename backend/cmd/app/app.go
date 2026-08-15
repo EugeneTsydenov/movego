@@ -11,11 +11,13 @@ import (
 	grpcadapter "movego/internal/adapters/grpc"
 	"movego/internal/adapters/jwt"
 	"movego/internal/adapters/postgres"
+	"movego/internal/adapters/postgres/sqlc"
 	"movego/internal/application"
 	"movego/internal/config"
 	"movego/internal/pkg/logger"
 	"movego/internal/pkg/telemetry"
 
+	"buf.build/go/protovalidate"
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -82,17 +84,23 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	}
 	appLogger.Info("net listener established", "addr", lis.Addr().String())
 
+	validator, _ := protovalidate.New()
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
-			grpcadapter.ErrorHInterceptor(),
 			grpcadapter.LoggingInterceptor(appLogger),
+			grpcadapter.ErrorInterceptor(),
+			grpcadapter.ValidationUnaryInterceptor(validator),
 		),
 	)
 
 	unitOfWork := postgres.NewUnitOfWork(db)
+	querier := sqlc.New(db)
+	credentialRepo := postgres.NewCredentialRepo(querier)
+	sessionRepo := postgres.NewSessionRepo(querier)
 	tokenIssuer := jwt.NewIssuer([]byte(os.Getenv("MOVEGO_JWT_SECRET_KEY")), cfg.JWT.AccessTTL, cfg.JWT.Issuer)
-	authServer := application.NewAuthService(unitOfWork, tokenIssuer, cfg.JWT.RefreshTTL)
+	authServer := application.NewAuthService(unitOfWork, credentialRepo, sessionRepo, tokenIssuer, cfg.JWT.RefreshTTL)
 	authHandler := grpcadapter.NewAuthHandler(authServer)
 
 	movegov1.RegisterAuthServiceServer(grpcServer, authHandler)
@@ -131,12 +139,10 @@ func (a *app) Stop(ctx context.Context) {
 		a.grpcServer.Stop()
 	}
 
-	// 2. Закрытие базы данных
 	a.Logger.Info("closing database connection pool...")
 	a.db.Close()
 	a.Logger.Info("database connection pool closed")
 
-	// 3. Завершение OpenTelemetry
 	if a.shutdownOtel != nil {
 		a.Logger.Info("shutting down telemetry...")
 		if err := a.shutdownOtel(ctx); err != nil {

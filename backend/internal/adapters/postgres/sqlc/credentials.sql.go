@@ -8,8 +8,51 @@ package sqlc
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const findForAuth = `-- name: FindForAuth :one
+SELECT
+    c.id, c.user_id, c.password_hash, c.provider, c.provider_key,
+    u.id, u.email, u.tag, u.display_name, u.role, u.created_at, u.updated_at, u.deleted_at
+FROM credentials c
+INNER JOIN users u ON u.id = c.user_id
+WHERE u.email = $1
+AND c.provider = $2
+AND u.deleted_at IS NULL
+`
+
+type FindForAuthParams struct {
+	Email    string `json:"email"`
+	Provider string `json:"provider"`
+}
+
+type FindForAuthRow struct {
+	Credentials Credentials `json:"credentials"`
+	Users       Users       `json:"users"`
+}
+
+func (q *Queries) FindForAuth(ctx context.Context, arg FindForAuthParams) (FindForAuthRow, error) {
+	row := q.db.QueryRow(ctx, findForAuth, arg.Email, arg.Provider)
+	var i FindForAuthRow
+	err := row.Scan(
+		&i.Credentials.ID,
+		&i.Credentials.UserID,
+		&i.Credentials.PasswordHash,
+		&i.Credentials.Provider,
+		&i.Credentials.ProviderKey,
+		&i.Users.ID,
+		&i.Users.Email,
+		&i.Users.Tag,
+		&i.Users.DisplayName,
+		&i.Users.Role,
+		&i.Users.CreatedAt,
+		&i.Users.UpdatedAt,
+		&i.Users.DeletedAt,
+	)
+	return i, err
+}
 
 const saveCredential = `-- name: SaveCredential :exec
 INSERT INTO credentials (
@@ -28,8 +71,8 @@ ON CONFLICT (id) DO UPDATE SET
 `
 
 type SaveCredentialParams struct {
-	ID           pgtype.UUID `json:"id"`
-	UserID       pgtype.UUID `json:"user_id"`
+	ID           uuid.UUID   `json:"id"`
+	UserID       uuid.UUID   `json:"user_id"`
 	PasswordHash pgtype.Text `json:"password_hash"`
 	Provider     string      `json:"provider"`
 	ProviderKey  pgtype.Text `json:"provider_key"`

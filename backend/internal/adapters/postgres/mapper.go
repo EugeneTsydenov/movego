@@ -1,26 +1,13 @@
 package postgres
 
 import (
+	"fmt"
 	"movego/internal/adapters/postgres/sqlc"
 	"movego/internal/domain"
 	"time"
 
-	"errors"
-
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-
-	"github.com/jackc/pgx/v5/pgconn"
 )
-
-// pg <-> domain
-func toPgUUID(u uuid.UUID) pgtype.UUID {
-	return pgtype.UUID{
-		Bytes: u,
-		Valid: true,
-	}
-}
 
 func toPgTextPtr(s *string) pgtype.Text {
 	if s == nil {
@@ -39,13 +26,6 @@ func toPgText(s string) pgtype.Text {
 	}
 }
 
-func toPgTimestampz(t time.Time) pgtype.Timestamptz {
-	return pgtype.Timestamptz{
-		Time:  t,
-		Valid: true,
-	}
-}
-
 func toPgTimestampzPtr(t *time.Time) pgtype.Timestamptz {
 	if t == nil {
 		return pgtype.Timestamptz{Valid: false}
@@ -56,10 +36,26 @@ func toPgTimestampzPtr(t *time.Time) pgtype.Timestamptz {
 	}
 }
 
+func fromPgTextPtr(v pgtype.Text) *string {
+	if !v.Valid {
+		return nil
+	}
+	s := v.String
+	return &s
+}
+
+func fromPgTimestampzPtr(v pgtype.Timestamptz) *time.Time {
+	if !v.Valid {
+		return nil
+	}
+	t := v.Time
+	return &t
+}
+
 func toSaveCredentialsParams(cred *domain.Credential) sqlc.SaveCredentialParams {
 	return sqlc.SaveCredentialParams{
-		ID:           toPgUUID(cred.ID()),
-		UserID:       toPgUUID(cred.UserID()),
+		ID:           cred.ID(),
+		UserID:       cred.UserID(),
 		PasswordHash: toPgTextPtr(cred.PasswordHash()),
 		Provider:     cred.Provider().String(),
 		ProviderKey:  toPgTextPtr(cred.ProviderKey()),
@@ -68,100 +64,83 @@ func toSaveCredentialsParams(cred *domain.Credential) sqlc.SaveCredentialParams 
 
 func toSaveSessionsParams(session *domain.Session) sqlc.SaveSessionParams {
 	return sqlc.SaveSessionParams{
-		ID:         toPgUUID(session.ID()),
-		UserID:     toPgUUID(session.UserID()),
+		ID:         session.ID(),
+		UserID:     session.UserID(),
 		SecretHash: session.SecretHash(),
 		UserAgent:  session.UserAgent(),
 		ClientIp:   session.ClientIP(),
-		ExpiresAt:  toPgTimestampz(session.ExpiresAt()),
-		CreatedAt:  toPgTimestampz(session.CreatedAt()),
+		ExpiresAt:  session.ExpiresAt(),
+		CreatedAt:  session.CreatedAt(),
 	}
 }
 
 func toSaveUsersParams(user *domain.User) sqlc.SaveUserParams {
 	return sqlc.SaveUserParams{
-		ID:          toPgUUID(user.ID()),
+		ID:          user.ID(),
 		Email:       user.Email().String(),
 		Tag:         user.Tag().String(),
 		DisplayName: user.DisplayName().String(),
 		Role:        user.Role().String(),
-		CreatedAt:   toPgTimestampz(user.CreatedAt()),
-		UpdatedAt:   toPgTimestampz(user.UpdatedAt()),
+		CreatedAt:   user.CreatedAt(),
+		UpdatedAt:   user.UpdatedAt(),
 		DeletedAt:   toPgTimestampzPtr(user.DeletedAt()),
 	}
 }
 
-// handle error
-func mapCredentialError(err error) error {
-	if err == nil {
-		return nil
+func toFindForAuthParams(email domain.Email, provider domain.Provider) sqlc.FindForAuthParams {
+	return sqlc.FindForAuthParams{
+		Email:    email.String(),
+		Provider: provider.String(),
 	}
-
-	if errors.Is(err, pgx.ErrNoRows) {
-		return domain.ErrCredentialNotFound
-	}
-
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
-		case "23505": // unique_violation
-			switch pgErr.ConstraintName {
-			case "credentials_provider_user_id_uq":
-				return domain.ErrProviderAlreadyLinked
-			case "credentials_provider_key_uq":
-				return domain.ErrProviderKeyTaken
-			}
-		case "23503": // foreign_key_violation
-			return domain.ErrUserNotFound
-		case "23514": // check_violation
-			return domain.ErrInvalidProvider
-		}
-	}
-
-	return err
 }
 
-func mapSessionError(err error) error {
-	if err == nil {
-		return nil
+func toDomainFindForAuthRow(row sqlc.FindForAuthRow) (*domain.User, *domain.Credential, error) {
+	userID := row.Users.ID
+	credentialUserID := row.Credentials.UserID
+
+	email, err := domain.NewEmail(row.Users.Email)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map email: %v", err)
 	}
 
-	if errors.Is(err, pgx.ErrNoRows) {
-		return domain.ErrSessionNotFound
+	tag, err := domain.NewTag(row.Users.Tag)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map tag: %v", err)
 	}
 
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
-		case "23503": // foreign_key_violation
-			return domain.ErrUserNotFound
-		}
+	displayName, err := domain.NewDisplayName(row.Users.DisplayName)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map display name: %v", err)
 	}
 
-	return err
-}
-
-func mapUserError(err error) error {
-	if err == nil {
-		return nil
+	role, err := domain.NewRole(row.Users.Role)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map role: %v", err)
 	}
 
-	if errors.Is(err, pgx.ErrNoRows) {
-		return domain.ErrUserNotFound
+	authProvider, err := domain.NewProvider(row.Credentials.Provider)
+	if err != nil {
+		return nil, nil, fmt.Errorf("map provider: %v", err)
 	}
 
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
-		case "23505": // unique_violation
-			switch pgErr.ConstraintName {
-			case "users_email_key":
-				return domain.ErrEmailTaken
-			case "users_tag_key":
-				return domain.ErrTagTaken
-			}
-		}
-	}
+	user := domain.RestoreUser(
+		userID,
+		email,
+		tag,
+		displayName,
+		role,
+		row.Users.CreatedAt,
+		row.Users.UpdatedAt,
+		fromPgTimestampzPtr(row.Users.DeletedAt),
+	)
 
-	return err
+	credential := domain.RestoreCredential(
+		row.Credentials.ID,
+		credentialUserID,
+		authProvider,
+		fromPgTextPtr(row.Credentials.PasswordHash),
+		fromPgTextPtr(row.Credentials.ProviderKey),
+	)
+
+	return user, credential, nil
 }

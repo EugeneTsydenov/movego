@@ -30,7 +30,14 @@ type SignUpOutput struct {
 }
 
 type SignInInput struct {
+	Email     string
+	Password  string
+	UserAgent string
+	ClientIP  string
 }
 
 type SignInOutput struct {
+	User         UserDTO
+	AccessToken  string
+	RefreshToken string
 }

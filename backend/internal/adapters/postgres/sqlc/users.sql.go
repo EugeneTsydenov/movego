@@ -7,7 +7,9 @@ package sqlc
 
 import (
 	"context"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -34,13 +36,13 @@ ON CONFLICT (id) DO UPDATE SET
 `
 
 type SaveUserParams struct {
-	ID          pgtype.UUID        `json:"id"`
+	ID          uuid.UUID          `json:"id"`
 	Email       string             `json:"email"`
 	Tag         string             `json:"tag"`
 	DisplayName string             `json:"display_name"`
 	Role        string             `json:"role"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
 	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }
 

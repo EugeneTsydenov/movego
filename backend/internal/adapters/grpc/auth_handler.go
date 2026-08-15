@@ -7,7 +7,8 @@ import (
 )
 
 type AuthService interface {
-	SignUp(ctx context.Context, dto application.SignUpInput) (application.SignUpOutput, error)
+	SignUp(ctx context.Context, in application.SignUpInput) (application.SignUpOutput, error)
+	SignIn(ctx context.Context, in application.SignInInput) (application.SignInOutput, error)
 }
 
 type AuthHandler struct {
@@ -22,10 +23,17 @@ func NewAuthHandler(authService AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) SignUp(ctx context.Context, req *movegov1.SignUpRequest) (*movegov1.SignUpResponse, error) {
-	res, err := h.authService.SignUp(ctx, toSignUpInput(req))
+	out, err := h.authService.SignUp(ctx, toSignUpInput(req))
 	if err != nil {
 		return nil, err
 	}
+	return toSignUpResponse(out), nil
+}
 
-	return toSignUpResponse(res), nil
+func (h *AuthHandler) SignIn(ctx context.Context, req *movegov1.SignInRequest) (*movegov1.SignInResponse, error) {
+	out, err := h.authService.SignIn(ctx, toSignInInput(req))
+	if err != nil {
+		return nil, err
+	}
+	return toSignInResponse(out), err
 }

@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	FindForAuth(ctx context.Context, arg FindForAuthParams) (FindForAuthRow, error)
 	SaveCredential(ctx context.Context, arg SaveCredentialParams) error
 	SaveSession(ctx context.Context, arg SaveSessionParams) error
 	SaveUser(ctx context.Context, arg SaveUserParams) error

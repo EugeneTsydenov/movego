@@ -43,6 +43,28 @@ func NewTemporaryUser(email Email, role Role) *User {
 	return NewUser(email, generateChessTagCandidate(), generateChessDisplayNameCandidate(email), role)
 }
 
+func RestoreUser(
+	id uuid.UUID,
+	email Email,
+	tag Tag,
+	displayName DisplayName,
+	role Role,
+	createdAt time.Time,
+	updatedAt time.Time,
+	deletedAt *time.Time,
+) *User {
+	return &User{
+		id:          id,
+		email:       email,
+		tag:         tag,
+		displayName: displayName,
+		role:        role,
+		createdAt:   createdAt,
+		updatedAt:   updatedAt,
+		deletedAt:   deletedAt,
+	}
+}
+
 func (u *User) ID() uuid.UUID {
 	return u.id
 }

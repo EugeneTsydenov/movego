@@ -25,6 +25,23 @@ func toSignUpResponse(out application.SignUpOutput) *movegov1.SignUpResponse {
 	}
 }
 
+func toSignInInput(req *movegov1.SignInRequest) application.SignInInput {
+	return application.SignInInput{
+		Email:     req.GetEmail(),
+		Password:  req.GetPassword(),
+		UserAgent: req.GetUserAgent(),
+		ClientIP:  req.GetClientIp(),
+	}
+}
+
+func toSignInResponse(out application.SignInOutput) *movegov1.SignInResponse {
+	return &movegov1.SignInResponse{
+		User:         toProtoUser(out.User),
+		AccessToken:  out.AccessToken,
+		RefreshToken: out.RefreshToken,
+	}
+}
+
 func toProtoUser(dto application.UserDTO) *movegov1.User {
 	return &movegov1.User{
 		Id:          dto.ID.String(),

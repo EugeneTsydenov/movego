@@ -39,3 +39,20 @@ func (r *UserRepo) Save(ctx context.Context, user *domain.User) error {
 	r.users[user.ID()] = user
 	return nil
 }
+
+func (r *UserRepo) FindForAuth(
+	_ context.Context,
+	email domain.Email,
+	_ domain.Provider,
+) (*domain.User, *domain.Credential, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, u := range r.users {
+		if u.Email() == email {
+			return nil, nil, domain.ErrAuthIdentityNotFound
+		}
+	}
+
+	return nil, nil, domain.ErrAuthIdentityNotFound
+}
