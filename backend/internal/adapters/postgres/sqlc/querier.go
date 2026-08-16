@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	Delete(ctx context.Context, id uuid.UUID) error
+	FindByID(ctx context.Context, id uuid.UUID) (Sessions, error)
 	FindForAuth(ctx context.Context, arg FindForAuthParams) (FindForAuthRow, error)
 	FindValid(ctx context.Context, id uuid.UUID) (FindValidRow, error)
 	ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]Sessions, error)

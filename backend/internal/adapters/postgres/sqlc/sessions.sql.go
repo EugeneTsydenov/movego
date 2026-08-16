@@ -22,6 +22,29 @@ func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const findByID = `-- name: FindByID :one
+SELECT id, user_id, secret_hash, user_agent, client_ip, last_active_at, expires_at, created_at
+FROM sessions s
+WHERE s.id = $1
+    AND s.expires_at > now()
+`
+
+func (q *Queries) FindByID(ctx context.Context, id uuid.UUID) (Sessions, error) {
+	row := q.db.QueryRow(ctx, findByID, id)
+	var i Sessions
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.SecretHash,
+		&i.UserAgent,
+		&i.ClientIp,
+		&i.LastActiveAt,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const findValid = `-- name: FindValid :one
 SELECT
     s.id, s.user_id, s.secret_hash, s.user_agent, s.client_ip, s.last_active_at, s.expires_at, s.created_at,

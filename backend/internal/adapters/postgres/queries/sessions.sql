@@ -27,6 +27,12 @@ WHERE s.id = $1
   AND s.expires_at > now()
   AND u.deleted_at IS NULL;
 
+-- name: FindByID :one
+SELECT *
+FROM sessions s
+WHERE s.id = $1
+    AND s.expires_at > now();
+
 -- name: ListActiveByUserID :many
 SELECT *
 FROM sessions s

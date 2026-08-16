@@ -39,6 +39,19 @@ func (r *SessionRepo) FindValid(ctx context.Context, sessionID uuid.UUID) (*doma
 	return toDomainFindValidRow(row)
 }
 
+func (r *SessionRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.Session, error) {
+	session, err := r.querier.FindByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrSessionNotFound
+		}
+
+		return nil, err
+	}
+
+	return toDomainSession(session), nil
+}
+
 func (r *SessionRepo) ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]*domain.Session, error) {
 	rows, err := r.querier.ListActiveByUserID(ctx, userID)
 	if err != nil {

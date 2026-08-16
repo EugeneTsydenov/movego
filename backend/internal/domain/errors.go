@@ -34,7 +34,9 @@ func newErr(kind error, message string) error {
 
 var (
 	// Not Found
-	ErrUserNotFound = newErr(ErrNotFound, "user not found")
+	ErrUserNotFound       = newErr(ErrNotFound, "user not found")
+	ErrSessionNotFound    = newErr(ErrNotFound, "session not found")
+	ErrCredentialNotFound = newErr(ErrNotFound, "credential not found")
 
 	// Already Exists
 	ErrEmailTaken            = newErr(ErrAlreadyExists, "email is already taken")
@@ -52,6 +54,4 @@ var (
 
 	// Authentication
 	ErrInvalidCredentials = newErr(ErrAuthentication, "invalid credentials")
-	ErrSessionNotFound    = newErr(ErrAuthentication, "session not found")
-	ErrCredentialNotFound = newErr(ErrAuthentication, "credential not found")
 )

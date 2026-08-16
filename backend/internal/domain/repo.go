@@ -18,6 +18,7 @@ type CredentialRepo interface {
 type SessionRepo interface {
 	Save(ctx context.Context, session *Session) error
 	FindValid(ctx context.Context, id uuid.UUID) (*Session, *User, error)
+	FindByID(ctx context.Context, id uuid.UUID) (*Session, error)
 	ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]*Session, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }

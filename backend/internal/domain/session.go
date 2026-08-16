@@ -42,13 +42,14 @@ func RestoreSession(
 	createdAt time.Time,
 ) *Session {
 	return &Session{
-		id:         id,
-		userID:     userID,
-		secretHash: secretHash,
-		userAgent:  userAgent,
-		clientIP:   clientIP,
-		expiresAt:  expiresAt,
-		createdAt:  createdAt,
+		id:           id,
+		userID:       userID,
+		secretHash:   secretHash,
+		userAgent:    userAgent,
+		clientIP:     clientIP,
+		lastActiveAt: lastActiveAt,
+		expiresAt:    expiresAt,
+		createdAt:    createdAt,
 	}
 }
 
@@ -60,3 +61,7 @@ func (s *Session) ClientIP() string        { return s.clientIP }
 func (s *Session) LastActiveAt() time.Time { return s.lastActiveAt }
 func (s *Session) ExpiresAt() time.Time    { return s.expiresAt }
 func (s *Session) CreatedAt() time.Time    { return s.createdAt }
+
+func (s *Session) CanBeRevoked(userID uuid.UUID) bool {
+	return s.UserID() == userID
+}

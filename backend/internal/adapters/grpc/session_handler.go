@@ -6,12 +6,11 @@ import (
 	"movego/internal/application"
 
 	"github.com/google/uuid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type sessionService interface {
 	GetActiveSessions(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) ([]application.SessionDTO, error)
+	RevokeSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) error
 }
 
 type SessionHandler struct {
@@ -26,22 +25,23 @@ func NewSessionHandler(sessionService sessionService) *SessionHandler {
 }
 
 func (h *SessionHandler) GetActiveSessions(ctx context.Context, req *movegov1.GetActiveSessionsRequest) (*movegov1.GetActiveSessionsResponse, error) {
-	userID, ok := userIDFromContext(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "missing user identifier")
-	}
-
-	sessionID, err := uuid.Parse(req.GetCurrentSessionId())
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid session_id argument")
-	}
-
+	userID := userIDFromContext(ctx)
+	sessionID, _ := uuid.Parse(req.GetCurrentSessionId())
 	sessions, err := h.sessionService.GetActiveSessions(ctx, userID, sessionID)
 	if err != nil {
 		return nil, err
 	}
-
 	return &movegov1.GetActiveSessionsResponse{
 		Sessions: toProtoSessions(sessions),
 	}, nil
+}
+
+func (h *SessionHandler) RevokeSession(ctx context.Context, req *movegov1.RevokeSessionRequest) (*movegov1.RevokeSessionResponse, error) {
+	userID := userIDFromContext(ctx)
+	sessionID, _ := uuid.Parse(req.GetSessionId())
+	err := h.sessionService.RevokeSession(ctx, userID, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	return &movegov1.RevokeSessionResponse{}, nil
 }

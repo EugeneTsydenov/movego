@@ -48,3 +48,21 @@ func (s *SessionService) GetActiveSessions(ctx context.Context, userID uuid.UUID
 
 	return dtos, nil
 }
+
+func (s *SessionService) RevokeSession(ctx context.Context, userID, sessionID uuid.UUID) error {
+	session, err := s.sessionRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+
+	if !session.CanBeRevoked(userID) {
+		return domain.ErrSessionNotFound
+	}
+
+	err = s.sessionRepo.Delete(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
