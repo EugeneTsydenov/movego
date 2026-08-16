@@ -1,0 +1,16 @@
+syntax = "proto3";
+package user.v1;
+
+option go_package = "user/gen/go/user/v1;userv1";
+
+import "google/protobuf/timestamp.proto";
+
+message User {
+  string id = 1;
+  string email = 2;
+  string tag = 3;
+  string display_name = 4;
+  string role = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}

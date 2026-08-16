@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./services/user-service/Dockerfile
     ports:
       - "8080:8080"
       - "2112:2112"
@@ -58,7 +58,7 @@ services:
     container_name: monitoring_tempo
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
-      - ./tempo.yaml:/etc/tempo.yaml
+      - ./observability/tempo.yaml:/etc/tempo.yaml
     ports:
       - "4317:4317" # OTLP gRPC
       - "3200:3200"
@@ -71,7 +71,7 @@ services:
     container_name: monitoring_loki
     command: [ "-config.file=/etc/loki.yaml" ]
     volumes:
-      - ./loki.yaml:/etc/loki.yaml
+      - ./observability/loki.yaml:/etc/loki.yaml
     ports:
       - "3100:3100"
     networks:
@@ -84,7 +84,7 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--web.enable-remote-write-receiver"
     volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+      - ./observability/prometheus.yaml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
     networks:
@@ -94,7 +94,7 @@ services:
     image: grafana/promtail:3.0.0
     container_name: monitoring_promtail
     volumes:
-      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./observability/promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: -config.file=/etc/promtail/config.yml
