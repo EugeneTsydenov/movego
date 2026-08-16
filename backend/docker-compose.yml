@@ -8,6 +8,7 @@ services:
     ports:
       - "8080:8080"
       - "2112:2112"
+      - "8081:8081"
     environment:
       - APP_ENV=dev
       - MOVEGO_DATABASE_PASSWORD=postgres

@@ -88,8 +88,9 @@ func (s *AuthService) SignUp(ctx context.Context, in SignUpInput) (SignUpOutput,
 	}
 
 	token, err := s.tokenIssuer.Issue(TokenClaims{
-		Sub:   user.ID(),
-		Roles: []string{domain.RoleUser.String()},
+		Sub:       user.ID(),
+		SessionID: session.ID(),
+		Roles:     []string{domain.RoleUser.String()},
 	})
 	if err != nil {
 		return SignUpOutput{}, err
@@ -147,8 +148,9 @@ func (s *AuthService) SignIn(ctx context.Context, in SignInInput) (SignInOutput,
 	}
 
 	token, err := s.tokenIssuer.Issue(TokenClaims{
-		Sub:   user.ID(),
-		Roles: []string{user.Role().String()},
+		Sub:       user.ID(),
+		SessionID: session.ID(),
+		Roles:     []string{user.Role().String()},
 	})
 	if err != nil {
 		return SignInOutput{}, err

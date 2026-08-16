@@ -64,13 +64,14 @@ func toSaveCredentialsParams(cred *domain.Credential) sqlc.SaveCredentialParams 
 
 func toSaveSessionsParams(session *domain.Session) sqlc.SaveSessionParams {
 	return sqlc.SaveSessionParams{
-		ID:         session.ID(),
-		UserID:     session.UserID(),
-		SecretHash: session.SecretHash(),
-		UserAgent:  session.UserAgent(),
-		ClientIp:   session.ClientIP(),
-		ExpiresAt:  session.ExpiresAt(),
-		CreatedAt:  session.CreatedAt(),
+		ID:           session.ID(),
+		UserID:       session.UserID(),
+		SecretHash:   session.SecretHash(),
+		UserAgent:    session.UserAgent(),
+		ClientIp:     session.ClientIP(),
+		LastActiveAt: session.LastActiveAt(),
+		ExpiresAt:    session.ExpiresAt(),
+		CreatedAt:    session.CreatedAt(),
 	}
 }
 
@@ -87,6 +88,67 @@ func toSaveUsersParams(user *domain.User) sqlc.SaveUserParams {
 	}
 }
 
+func toDomainSession(session sqlc.Sessions) *domain.Session {
+	return domain.RestoreSession(
+		session.ID,
+		session.UserID,
+		session.SecretHash,
+		session.UserAgent,
+		session.ClientIp,
+		session.LastActiveAt,
+		session.ExpiresAt,
+		session.CreatedAt,
+	)
+}
+
+func toDomainUser(row sqlc.Users) (*domain.User, error) {
+	email, err := domain.NewEmail(row.Email)
+	if err != nil {
+		return nil, fmt.Errorf("map email: %v", err)
+	}
+
+	tag, err := domain.NewTag(row.Tag)
+	if err != nil {
+		return nil, fmt.Errorf("map tag: %v", err)
+	}
+
+	displayName, err := domain.NewDisplayName(row.DisplayName)
+	if err != nil {
+		return nil, fmt.Errorf("map display name: %v", err)
+	}
+
+	role, err := domain.NewRole(row.Role)
+	if err != nil {
+		return nil, fmt.Errorf("map role: %v", err)
+	}
+
+	return domain.RestoreUser(
+		row.ID,
+		email,
+		tag,
+		displayName,
+		role,
+		row.CreatedAt,
+		row.UpdatedAt,
+		fromPgTimestampzPtr(row.DeletedAt),
+	), nil
+}
+
+func toDomainCredential(row sqlc.Credentials) (*domain.Credential, error) {
+	provider, err := domain.NewProvider(row.Provider)
+	if err != nil {
+		return nil, fmt.Errorf("map provider: %v", err)
+	}
+
+	return domain.RestoreCredential(
+		row.ID,
+		row.UserID,
+		provider,
+		fromPgTextPtr(row.PasswordHash),
+		fromPgTextPtr(row.ProviderKey),
+	), nil
+}
+
 func toFindForAuthParams(email domain.Email, provider domain.Provider) sqlc.FindForAuthParams {
 	return sqlc.FindForAuthParams{
 		Email:    email.String(),
@@ -95,97 +157,32 @@ func toFindForAuthParams(email domain.Email, provider domain.Provider) sqlc.Find
 }
 
 func toDomainFindForAuthRow(row sqlc.FindForAuthRow) (*domain.User, *domain.Credential, error) {
-	userID := row.Users.ID
-	credentialUserID := row.Credentials.UserID
-
-	email, err := domain.NewEmail(row.Users.Email)
+	user, err := toDomainUser(row.Users)
 	if err != nil {
-		return nil, nil, fmt.Errorf("map email: %v", err)
+		return nil, nil, err
 	}
 
-	tag, err := domain.NewTag(row.Users.Tag)
+	credential, err := toDomainCredential(row.Credentials)
 	if err != nil {
-		return nil, nil, fmt.Errorf("map tag: %v", err)
+		return nil, nil, err
 	}
-
-	displayName, err := domain.NewDisplayName(row.Users.DisplayName)
-	if err != nil {
-		return nil, nil, fmt.Errorf("map display name: %v", err)
-	}
-
-	role, err := domain.NewRole(row.Users.Role)
-	if err != nil {
-		return nil, nil, fmt.Errorf("map role: %v", err)
-	}
-
-	authProvider, err := domain.NewProvider(row.Credentials.Provider)
-	if err != nil {
-		return nil, nil, fmt.Errorf("map provider: %v", err)
-	}
-
-	user := domain.RestoreUser(
-		userID,
-		email,
-		tag,
-		displayName,
-		role,
-		row.Users.CreatedAt,
-		row.Users.UpdatedAt,
-		fromPgTimestampzPtr(row.Users.DeletedAt),
-	)
-
-	credential := domain.RestoreCredential(
-		row.Credentials.ID,
-		credentialUserID,
-		authProvider,
-		fromPgTextPtr(row.Credentials.PasswordHash),
-		fromPgTextPtr(row.Credentials.ProviderKey),
-	)
 
 	return user, credential, nil
 }
 
 func toDomainFindValidRow(row sqlc.FindValidRow) (*domain.Session, *domain.User, error) {
-	email, err := domain.NewEmail(row.Users.Email)
+	user, err := toDomainUser(row.Users)
 	if err != nil {
-		return nil, nil, fmt.Errorf("map email: %v", err)
+		return nil, nil, err
 	}
-
-	tag, err := domain.NewTag(row.Users.Tag)
-	if err != nil {
-		return nil, nil, fmt.Errorf("map tag: %v", err)
-	}
-
-	displayName, err := domain.NewDisplayName(row.Users.DisplayName)
-	if err != nil {
-		return nil, nil, fmt.Errorf("map display name: %v", err)
-	}
-
-	role, err := domain.NewRole(row.Users.Role)
-	if err != nil {
-		return nil, nil, fmt.Errorf("map role: %v", err)
-	}
-
-	user := domain.RestoreUser(
-		row.Users.ID,
-		email,
-		tag,
-		displayName,
-		role,
-		row.Users.CreatedAt,
-		row.Users.UpdatedAt,
-		fromPgTimestampzPtr(row.Users.DeletedAt),
-	)
-
-	session := domain.RestoreSession(
-		row.Sessions.ID,
-		row.Sessions.UserID,
-		row.Sessions.SecretHash,
-		row.Sessions.UserAgent,
-		row.Sessions.ClientIp,
-		row.Sessions.ExpiresAt,
-		row.Sessions.CreatedAt,
-	)
-
+	session := toDomainSession(row.Sessions)
 	return session, user, nil
+}
+
+func toDomainSessionList(rows []sqlc.Sessions) []*domain.Session {
+	sessions := make([]*domain.Session, len(rows))
+	for i, row := range rows {
+		sessions[i] = toDomainSession(row)
+	}
+	return sessions
 }

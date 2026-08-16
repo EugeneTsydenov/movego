@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -33,7 +32,7 @@ type AuthServiceClient interface {
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
 	SignIn(ctx context.Context, in *SignInRequest, opts ...grpc.CallOption) (*SignInResponse, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error)
-	SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*SignOutResponse, error)
 }
 
 type authServiceClient struct {
@@ -74,9 +73,9 @@ func (c *authServiceClient) Refresh(ctx context.Context, in *RefreshRequest, opt
 	return out, nil
 }
 
-func (c *authServiceClient) SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *authServiceClient) SignOut(ctx context.Context, in *SignOutRequest, opts ...grpc.CallOption) (*SignOutResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(SignOutResponse)
 	err := c.cc.Invoke(ctx, AuthService_SignOut_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -91,7 +90,7 @@ type AuthServiceServer interface {
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
 	SignIn(context.Context, *SignInRequest) (*SignInResponse, error)
 	Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error)
-	SignOut(context.Context, *SignOutRequest) (*emptypb.Empty, error)
+	SignOut(context.Context, *SignOutRequest) (*SignOutResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -111,7 +110,7 @@ func (UnimplementedAuthServiceServer) SignIn(context.Context, *SignInRequest) (*
 func (UnimplementedAuthServiceServer) Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Refresh not implemented")
 }
-func (UnimplementedAuthServiceServer) SignOut(context.Context, *SignOutRequest) (*emptypb.Empty, error) {
+func (UnimplementedAuthServiceServer) SignOut(context.Context, *SignOutRequest) (*SignOutResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SignOut not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}

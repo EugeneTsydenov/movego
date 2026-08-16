@@ -27,7 +27,7 @@ type User struct {
 }
 
 func NewUser(email Email, tag Tag, displayName DisplayName, role Role) *User {
-	now := time.Now()
+	now := time.Now().UTC()
 	return &User{
 		id:          uuid.Must(uuid.NewV7()),
 		email:       email,
@@ -121,6 +121,9 @@ func generateChessDisplayNameCandidate(email Email) DisplayName {
 	raw := email.String() // "oleg@gmail.com"
 	if at := strings.Index(raw, "@"); at > 0 {
 		raw = raw[:at] // "oleg"
+	}
+	if len(raw) > maxDisplayNameLength {
+		raw = raw[:maxDisplayNameLength]
 	}
 	name, _ := NewDisplayName(raw)
 	return name

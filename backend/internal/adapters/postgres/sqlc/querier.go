@@ -14,6 +14,7 @@ type Querier interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	FindForAuth(ctx context.Context, arg FindForAuthParams) (FindForAuthRow, error)
 	FindValid(ctx context.Context, id uuid.UUID) (FindValidRow, error)
+	ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]Sessions, error)
 	SaveCredential(ctx context.Context, arg SaveCredentialParams) error
 	SaveSession(ctx context.Context, arg SaveSessionParams) error
 	SaveUser(ctx context.Context, arg SaveUserParams) error

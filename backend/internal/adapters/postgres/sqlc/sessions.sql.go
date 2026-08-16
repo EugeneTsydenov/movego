@@ -24,7 +24,7 @@ func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
 
 const findValid = `-- name: FindValid :one
 SELECT
-    s.id, s.user_id, s.secret_hash, s.user_agent, s.client_ip, s.expires_at, s.created_at,
+    s.id, s.user_id, s.secret_hash, s.user_agent, s.client_ip, s.last_active_at, s.expires_at, s.created_at,
     u.id, u.email, u.tag, u.display_name, u.role, u.created_at, u.updated_at, u.deleted_at
 FROM sessions s
 INNER JOIN users u ON u.id = s.user_id
@@ -47,6 +47,7 @@ func (q *Queries) FindValid(ctx context.Context, id uuid.UUID) (FindValidRow, er
 		&i.Sessions.SecretHash,
 		&i.Sessions.UserAgent,
 		&i.Sessions.ClientIp,
+		&i.Sessions.LastActiveAt,
 		&i.Sessions.ExpiresAt,
 		&i.Sessions.CreatedAt,
 		&i.Users.ID,
@@ -61,6 +62,42 @@ func (q *Queries) FindValid(ctx context.Context, id uuid.UUID) (FindValidRow, er
 	return i, err
 }
 
+const listActiveByUserID = `-- name: ListActiveByUserID :many
+SELECT id, user_id, secret_hash, user_agent, client_ip, last_active_at, expires_at, created_at
+FROM sessions s
+WHERE s.user_id = $1
+    AND s.expires_at > now()
+`
+
+func (q *Queries) ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]Sessions, error) {
+	rows, err := q.db.Query(ctx, listActiveByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Sessions
+	for rows.Next() {
+		var i Sessions
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.SecretHash,
+			&i.UserAgent,
+			&i.ClientIp,
+			&i.LastActiveAt,
+			&i.ExpiresAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const saveSession = `-- name: SaveSession :exec
 INSERT INTO sessions (
     id,
@@ -68,10 +105,11 @@ INSERT INTO sessions (
     secret_hash,
     user_agent,
     client_ip,
+    last_active_at,
     expires_at,
     created_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6, $7, $8
 )
 ON CONFLICT (id) DO UPDATE SET
     secret_hash = EXCLUDED.secret_hash,
@@ -81,13 +119,14 @@ ON CONFLICT (id) DO UPDATE SET
 `
 
 type SaveSessionParams struct {
-	ID         uuid.UUID `json:"id"`
-	UserID     uuid.UUID `json:"user_id"`
-	SecretHash string    `json:"secret_hash"`
-	UserAgent  string    `json:"user_agent"`
-	ClientIp   string    `json:"client_ip"`
-	ExpiresAt  time.Time `json:"expires_at"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID           uuid.UUID `json:"id"`
+	UserID       uuid.UUID `json:"user_id"`
+	SecretHash   string    `json:"secret_hash"`
+	UserAgent    string    `json:"user_agent"`
+	ClientIp     string    `json:"client_ip"`
+	LastActiveAt time.Time `json:"last_active_at"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 func (q *Queries) SaveSession(ctx context.Context, arg SaveSessionParams) error {
@@ -97,6 +136,7 @@ func (q *Queries) SaveSession(ctx context.Context, arg SaveSessionParams) error 
 		arg.SecretHash,
 		arg.UserAgent,
 		arg.ClientIp,
+		arg.LastActiveAt,
 		arg.ExpiresAt,
 		arg.CreatedAt,
 	)

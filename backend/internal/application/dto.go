@@ -16,6 +16,16 @@ type UserDTO struct {
 	CreatedAt   time.Time
 }
 
+type SessionDTO struct {
+	ID           uuid.UUID
+	UserAgent    string
+	ClientIP     string
+	IsCurrent    bool
+	LastActiveAt time.Time
+	CreatedAt    time.Time
+	ExpiresAt    time.Time
+}
+
 type SignUpInput struct {
 	Email     string
 	Password  string

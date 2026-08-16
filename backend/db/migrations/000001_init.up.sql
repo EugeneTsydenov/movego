@@ -31,6 +31,7 @@ CREATE TABLE sessions (
     secret_hash TEXT NOT NULL,
     user_agent TEXT NOT NULL,
     client_ip TEXT NOT NULL,
+    last_active_at TIMESTAMPTZ NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL
 );

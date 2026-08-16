@@ -30,6 +30,7 @@ type Config struct {
 	Server struct {
 		Host            string        `mapstructure:"host" json:"host"`
 		Port            int           `mapstructure:"port" json:"port"`
+		PrivatePort     int           `mapstructure:"private_port" json:"private_port"`
 		ReadTimeout     time.Duration `mapstructure:"read_timeout" json:"read_timeout"`
 		WriteTimeout    time.Duration `mapstructure:"write_timeout" json:"write_timeout"`
 		IdleTimeout     time.Duration `mapstructure:"idle_timeout" json:"idle_timeout"`

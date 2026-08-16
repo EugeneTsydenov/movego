@@ -6,13 +6,12 @@ option go_package = "movego/gen/go/movego/v1;movegov1";
 
 import "movego/v1/user.proto";
 import "buf/validate/validate.proto";
-import "google/protobuf/empty.proto";
 
 service AuthService {
   rpc SignUp(SignUpRequest) returns (SignUpResponse);
   rpc SignIn(SignInRequest) returns (SignInResponse);
   rpc Refresh(RefreshRequest) returns (RefreshResponse);
-  rpc SignOut(SignOutRequest) returns (google.protobuf.Empty);
+  rpc SignOut(SignOutRequest) returns (SignOutResponse);
 }
 
 message SignUpRequest {
@@ -65,3 +64,5 @@ message RefreshResponse {
 message SignOutRequest {
     string refresh_token = 1;
 }
+
+message SignOutResponse {}

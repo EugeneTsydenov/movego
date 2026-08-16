@@ -19,6 +19,7 @@ COPY --from=builder /app/bin/server /app/server
 COPY --from=builder /app/configs /app/configs
 
 EXPOSE 8080
+EXPOSE 8081
 EXPOSE 2112
 
 CMD ["/app/server", "--config=configs"]

@@ -20,13 +20,14 @@ type Credentials struct {
 }
 
 type Sessions struct {
-	ID         uuid.UUID `json:"id"`
-	UserID     uuid.UUID `json:"user_id"`
-	SecretHash string    `json:"secret_hash"`
-	UserAgent  string    `json:"user_agent"`
-	ClientIp   string    `json:"client_ip"`
-	ExpiresAt  time.Time `json:"expires_at"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID           uuid.UUID `json:"id"`
+	UserID       uuid.UUID `json:"user_id"`
+	SecretHash   string    `json:"secret_hash"`
+	UserAgent    string    `json:"user_agent"`
+	ClientIp     string    `json:"client_ip"`
+	LastActiveAt time.Time `json:"last_active_at"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type Users struct {

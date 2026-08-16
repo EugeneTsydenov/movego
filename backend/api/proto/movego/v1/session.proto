@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package movego.v1;
+
+option go_package = "movego/gen/go/movego/v1;movegov1";
+
+import "google/protobuf/timestamp.proto";
+
+message SessionInfo {
+    string id = 1;
+    string user_agent = 2;
+    string client_ip = 3;
+    google.protobuf.Timestamp last_active_at = 4;
+    google.protobuf.Timestamp created_at = 5;
+    google.protobuf.Timestamp expires_at = 6;
+    bool is_current = 7;
+}
+
+service SessionService {
+    rpc GetActiveSessions(GetActiveSessionsRequest) returns (GetActiveSessionsResponse);
+}
+
+message GetActiveSessionsRequest {
+    string current_session_id = 1;
+}
+
+message GetActiveSessionsResponse {
+    repeated SessionInfo sessions = 1;
+}

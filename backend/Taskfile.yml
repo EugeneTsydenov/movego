@@ -9,3 +9,7 @@ tasks:
     cmds:
       - buf lint
       - buf push
+  migrate-up:
+    cmd: migrate -path db/migrations -database "postgres://postgres:postgres@localhost:5432/movego_dev?sslmode=disable" up
+  migrate-down:
+    cmd: migrate -path db/migrations -database "postgres://postgres:postgres@localhost:5432/movego_dev?sslmode=disable" down

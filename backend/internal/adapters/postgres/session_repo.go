@@ -39,6 +39,15 @@ func (r *SessionRepo) FindValid(ctx context.Context, sessionID uuid.UUID) (*doma
 	return toDomainFindValidRow(row)
 }
 
+func (r *SessionRepo) ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]*domain.Session, error) {
+	rows, err := r.querier.ListActiveByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomainSessionList(rows), nil
+}
+
 func (r *SessionRepo) Delete(ctx context.Context, sessionID uuid.UUID) error {
 	return r.querier.Delete(ctx, sessionID)
 }

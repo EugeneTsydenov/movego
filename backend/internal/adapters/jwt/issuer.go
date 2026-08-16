@@ -17,6 +17,7 @@ var (
 
 type customClaims struct {
 	jwt.RegisteredClaims
+	SessionID   string   `json:"session_id,omitempty"`
 	Roles       []string `json:"roles,omitempty"`
 	Permissions []string `json:"permissions,omitempty"`
 }
@@ -45,6 +46,7 @@ func (i *Issuer) Issue(claims application.TokenClaims) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(i.ttl)),
 			IssuedAt:  jwt.NewNumericDate(now),
 		},
+		SessionID:   claims.SessionID.String(),
 		Roles:       claims.Roles,
 		Permissions: claims.Permissions,
 	}
@@ -81,8 +83,14 @@ func (i *Issuer) Verify(tokenStr string) (application.TokenClaims, error) {
 		return application.TokenClaims{}, fmt.Errorf("invalid subject UUID: %w", err)
 	}
 
+	sessionUUID, err := uuid.Parse(claims.SessionID)
+	if err != nil {
+		return application.TokenClaims{}, fmt.Errorf("invalid session ID UUID: %w", err)
+	}
+
 	return application.TokenClaims{
 		Sub:         subUUID,
+		SessionID:   sessionUUID,
 		Roles:       claims.Roles,
 		Permissions: claims.Permissions,
 	}, nil

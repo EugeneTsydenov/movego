@@ -86,3 +86,24 @@ func toUserDTO(user *movegov1.User) application.UserDTO {
 		UpdatedAt:   user.GetUpdatedAt().AsTime(),
 	}
 }
+
+func toProtoSession(session application.SessionDTO) *movegov1.SessionInfo {
+	return &movegov1.SessionInfo{
+		Id:           session.ID.String(),
+		UserAgent:    session.UserAgent,
+		ClientIp:     session.ClientIP,
+		IsCurrent:    session.IsCurrent,
+		LastActiveAt: timestamppb.New(session.LastActiveAt),
+		CreatedAt:    timestamppb.New(session.CreatedAt),
+		ExpiresAt:    timestamppb.New(session.ExpiresAt),
+	}
+}
+
+func toProtoSessions(sessions []application.SessionDTO) []*movegov1.SessionInfo {
+	protoSessions := make([]*movegov1.SessionInfo, len(sessions))
+	for i := range sessions {
+		protoSessions[i] = toProtoSession(sessions[i])
+	}
+
+	return protoSessions
+}

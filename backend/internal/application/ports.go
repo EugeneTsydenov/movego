@@ -13,6 +13,7 @@ type UnitOfWork interface {
 
 type TokenClaims struct {
 	Sub         uuid.UUID
+	SessionID   uuid.UUID
 	Roles       []string
 	Permissions []string
 }
