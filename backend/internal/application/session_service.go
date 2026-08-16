@@ -66,3 +66,7 @@ func (s *SessionService) RevokeSession(ctx context.Context, userID, sessionID uu
 
 	return nil
 }
+
+func (s *SessionService) RevokeOtherSessions(ctx context.Context, userID, currSessionID uuid.UUID) error {
+	return s.sessionRepo.DeleteAllExcept(ctx, userID, currSessionID)
+}

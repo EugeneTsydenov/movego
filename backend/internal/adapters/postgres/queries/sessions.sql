@@ -29,16 +29,21 @@ WHERE s.id = $1
 
 -- name: FindByID :one
 SELECT *
-FROM sessions s
-WHERE s.id = $1
-    AND s.expires_at > now();
+FROM sessions
+WHERE id = $1
+    AND expires_at > now();
 
 -- name: ListActiveByUserID :many
 SELECT *
-FROM sessions s
-WHERE s.user_id = $1
-    AND s.expires_at > now();
+FROM sessions
+WHERE user_id = $1
+    AND expires_at > now();
 
 -- name: Delete :exec
 DELETE FROM sessions
 WHERE id = $1;
+
+-- name: DeleteAllExcept :exec
+DELETE FROM sessions
+WHERE user_id = $1
+    AND id != $2;

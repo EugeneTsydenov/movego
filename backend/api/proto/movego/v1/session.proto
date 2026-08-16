@@ -21,6 +21,7 @@ message SessionInfo {
 service SessionService {
     rpc GetActiveSessions(GetActiveSessionsRequest) returns (GetActiveSessionsResponse);
     rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+    rpc RevokeOtherSessions(RevokeOtherSessionsRequest) returns (RevokeOtherSessionsResponse);
 }
 
 message GetActiveSessionsRequest {
@@ -36,3 +37,9 @@ message RevokeSessionRequest {
 }
 
 message RevokeSessionResponse {}
+
+message RevokeOtherSessionsRequest {
+    string current_session_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message RevokeOtherSessionsResponse {}

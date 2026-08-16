@@ -283,6 +283,86 @@ func (*RevokeSessionResponse) Descriptor() ([]byte, []int) {
 	return file_movego_v1_session_proto_rawDescGZIP(), []int{4}
 }
 
+type RevokeOtherSessionsRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	CurrentSessionId string                 `protobuf:"bytes,1,opt,name=current_session_id,json=currentSessionId,proto3" json:"current_session_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *RevokeOtherSessionsRequest) Reset() {
+	*x = RevokeOtherSessionsRequest{}
+	mi := &file_movego_v1_session_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeOtherSessionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeOtherSessionsRequest) ProtoMessage() {}
+
+func (x *RevokeOtherSessionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_movego_v1_session_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeOtherSessionsRequest.ProtoReflect.Descriptor instead.
+func (*RevokeOtherSessionsRequest) Descriptor() ([]byte, []int) {
+	return file_movego_v1_session_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RevokeOtherSessionsRequest) GetCurrentSessionId() string {
+	if x != nil {
+		return x.CurrentSessionId
+	}
+	return ""
+}
+
+type RevokeOtherSessionsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeOtherSessionsResponse) Reset() {
+	*x = RevokeOtherSessionsResponse{}
+	mi := &file_movego_v1_session_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeOtherSessionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeOtherSessionsResponse) ProtoMessage() {}
+
+func (x *RevokeOtherSessionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_movego_v1_session_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeOtherSessionsResponse.ProtoReflect.Descriptor instead.
+func (*RevokeOtherSessionsResponse) Descriptor() ([]byte, []int) {
+	return file_movego_v1_session_proto_rawDescGZIP(), []int{6}
+}
+
 var File_movego_v1_session_proto protoreflect.FileDescriptor
 
 const file_movego_v1_session_proto_rawDesc = "" +
@@ -307,10 +387,14 @@ const file_movego_v1_session_proto_rawDesc = "" +
 	"\x14RevokeSessionRequest\x12'\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tsessionId\"\x17\n" +
-	"\x15RevokeSessionResponse2\xc4\x01\n" +
+	"\x15RevokeSessionResponse\"T\n" +
+	"\x1aRevokeOtherSessionsRequest\x126\n" +
+	"\x12current_session_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x10currentSessionId\"\x1d\n" +
+	"\x1bRevokeOtherSessionsResponse2\xaa\x02\n" +
 	"\x0eSessionService\x12^\n" +
 	"\x11GetActiveSessions\x12#.movego.v1.GetActiveSessionsRequest\x1a$.movego.v1.GetActiveSessionsResponse\x12R\n" +
-	"\rRevokeSession\x12\x1f.movego.v1.RevokeSessionRequest\x1a .movego.v1.RevokeSessionResponseB\"Z movego/gen/go/movego/v1;movegov1b\x06proto3"
+	"\rRevokeSession\x12\x1f.movego.v1.RevokeSessionRequest\x1a .movego.v1.RevokeSessionResponse\x12d\n" +
+	"\x13RevokeOtherSessions\x12%.movego.v1.RevokeOtherSessionsRequest\x1a&.movego.v1.RevokeOtherSessionsResponseB\"Z movego/gen/go/movego/v1;movegov1b\x06proto3"
 
 var (
 	file_movego_v1_session_proto_rawDescOnce sync.Once
@@ -324,26 +408,30 @@ func file_movego_v1_session_proto_rawDescGZIP() []byte {
 	return file_movego_v1_session_proto_rawDescData
 }
 
-var file_movego_v1_session_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_movego_v1_session_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_movego_v1_session_proto_goTypes = []any{
-	(*SessionInfo)(nil),               // 0: movego.v1.SessionInfo
-	(*GetActiveSessionsRequest)(nil),  // 1: movego.v1.GetActiveSessionsRequest
-	(*GetActiveSessionsResponse)(nil), // 2: movego.v1.GetActiveSessionsResponse
-	(*RevokeSessionRequest)(nil),      // 3: movego.v1.RevokeSessionRequest
-	(*RevokeSessionResponse)(nil),     // 4: movego.v1.RevokeSessionResponse
-	(*timestamppb.Timestamp)(nil),     // 5: google.protobuf.Timestamp
+	(*SessionInfo)(nil),                 // 0: movego.v1.SessionInfo
+	(*GetActiveSessionsRequest)(nil),    // 1: movego.v1.GetActiveSessionsRequest
+	(*GetActiveSessionsResponse)(nil),   // 2: movego.v1.GetActiveSessionsResponse
+	(*RevokeSessionRequest)(nil),        // 3: movego.v1.RevokeSessionRequest
+	(*RevokeSessionResponse)(nil),       // 4: movego.v1.RevokeSessionResponse
+	(*RevokeOtherSessionsRequest)(nil),  // 5: movego.v1.RevokeOtherSessionsRequest
+	(*RevokeOtherSessionsResponse)(nil), // 6: movego.v1.RevokeOtherSessionsResponse
+	(*timestamppb.Timestamp)(nil),       // 7: google.protobuf.Timestamp
 }
 var file_movego_v1_session_proto_depIdxs = []int32{
-	5, // 0: movego.v1.SessionInfo.last_active_at:type_name -> google.protobuf.Timestamp
-	5, // 1: movego.v1.SessionInfo.created_at:type_name -> google.protobuf.Timestamp
-	5, // 2: movego.v1.SessionInfo.expires_at:type_name -> google.protobuf.Timestamp
+	7, // 0: movego.v1.SessionInfo.last_active_at:type_name -> google.protobuf.Timestamp
+	7, // 1: movego.v1.SessionInfo.created_at:type_name -> google.protobuf.Timestamp
+	7, // 2: movego.v1.SessionInfo.expires_at:type_name -> google.protobuf.Timestamp
 	0, // 3: movego.v1.GetActiveSessionsResponse.sessions:type_name -> movego.v1.SessionInfo
 	1, // 4: movego.v1.SessionService.GetActiveSessions:input_type -> movego.v1.GetActiveSessionsRequest
 	3, // 5: movego.v1.SessionService.RevokeSession:input_type -> movego.v1.RevokeSessionRequest
-	2, // 6: movego.v1.SessionService.GetActiveSessions:output_type -> movego.v1.GetActiveSessionsResponse
-	4, // 7: movego.v1.SessionService.RevokeSession:output_type -> movego.v1.RevokeSessionResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
+	5, // 6: movego.v1.SessionService.RevokeOtherSessions:input_type -> movego.v1.RevokeOtherSessionsRequest
+	2, // 7: movego.v1.SessionService.GetActiveSessions:output_type -> movego.v1.GetActiveSessionsResponse
+	4, // 8: movego.v1.SessionService.RevokeSession:output_type -> movego.v1.RevokeSessionResponse
+	6, // 9: movego.v1.SessionService.RevokeOtherSessions:output_type -> movego.v1.RevokeOtherSessionsResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
 	4, // [4:4] is the sub-list for extension extendee
 	0, // [0:4] is the sub-list for field type_name
@@ -360,7 +448,7 @@ func file_movego_v1_session_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_movego_v1_session_proto_rawDesc), len(file_movego_v1_session_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

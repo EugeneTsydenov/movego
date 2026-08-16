@@ -64,3 +64,10 @@ func (r *SessionRepo) ListActiveByUserID(ctx context.Context, userID uuid.UUID) 
 func (r *SessionRepo) Delete(ctx context.Context, sessionID uuid.UUID) error {
 	return r.querier.Delete(ctx, sessionID)
 }
+
+func (r *SessionRepo) DeleteAllExcept(ctx context.Context, userID, sessionID uuid.UUID) error {
+	return r.querier.DeleteAllExcept(ctx, sqlc.DeleteAllExceptParams{
+		ID:     sessionID,
+		UserID: userID,
+	})
+}

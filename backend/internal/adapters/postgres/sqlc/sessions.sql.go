@@ -22,11 +22,27 @@ func (q *Queries) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const deleteAllExcept = `-- name: DeleteAllExcept :exec
+DELETE FROM sessions
+WHERE user_id = $1
+    AND id != $2
+`
+
+type DeleteAllExceptParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
+}
+
+func (q *Queries) DeleteAllExcept(ctx context.Context, arg DeleteAllExceptParams) error {
+	_, err := q.db.Exec(ctx, deleteAllExcept, arg.UserID, arg.ID)
+	return err
+}
+
 const findByID = `-- name: FindByID :one
 SELECT id, user_id, secret_hash, user_agent, client_ip, last_active_at, expires_at, created_at
-FROM sessions s
-WHERE s.id = $1
-    AND s.expires_at > now()
+FROM sessions
+WHERE id = $1
+    AND expires_at > now()
 `
 
 func (q *Queries) FindByID(ctx context.Context, id uuid.UUID) (Sessions, error) {
@@ -87,9 +103,9 @@ func (q *Queries) FindValid(ctx context.Context, id uuid.UUID) (FindValidRow, er
 
 const listActiveByUserID = `-- name: ListActiveByUserID :many
 SELECT id, user_id, secret_hash, user_agent, client_ip, last_active_at, expires_at, created_at
-FROM sessions s
-WHERE s.user_id = $1
-    AND s.expires_at > now()
+FROM sessions
+WHERE user_id = $1
+    AND expires_at > now()
 `
 
 func (q *Queries) ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]Sessions, error) {

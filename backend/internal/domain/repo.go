@@ -21,6 +21,7 @@ type SessionRepo interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*Session, error)
 	ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]*Session, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	DeleteAllExcept(ctx context.Context, userID, sessionID uuid.UUID) error
 }
 
 type Repos interface {

@@ -11,6 +11,7 @@ import (
 type sessionService interface {
 	GetActiveSessions(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) ([]application.SessionDTO, error)
 	RevokeSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) error
+	RevokeOtherSessions(ctx context.Context, userID, currSessionID uuid.UUID) error
 }
 
 type SessionHandler struct {
@@ -44,4 +45,14 @@ func (h *SessionHandler) RevokeSession(ctx context.Context, req *movegov1.Revoke
 		return nil, err
 	}
 	return &movegov1.RevokeSessionResponse{}, nil
+}
+
+func (h *SessionHandler) RevokeOtherSessions(ctx context.Context, req *movegov1.RevokeOtherSessionsRequest) (*movegov1.RevokeOtherSessionsResponse, error) {
+	userID := userIDFromContext(ctx)
+	sessionID, _ := uuid.Parse(req.GetCurrentSessionId())
+	err := h.sessionService.RevokeOtherSessions(ctx, userID, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	return &movegov1.RevokeOtherSessionsResponse{}, nil
 }

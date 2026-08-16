@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	Delete(ctx context.Context, id uuid.UUID) error
+	DeleteAllExcept(ctx context.Context, arg DeleteAllExceptParams) error
 	FindByID(ctx context.Context, id uuid.UUID) (Sessions, error)
 	FindForAuth(ctx context.Context, arg FindForAuthParams) (FindForAuthRow, error)
 	FindValid(ctx context.Context, id uuid.UUID) (FindValidRow, error)
