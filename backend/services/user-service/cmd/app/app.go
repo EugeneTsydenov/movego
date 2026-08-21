@@ -15,8 +15,9 @@ import (
 	"user/internal/adapters/postgres/sqlc"
 	"user/internal/application"
 	"user/internal/config"
-	"user/internal/pkg/logger"
-	"user/internal/pkg/telemetry"
+
+	"shared/logger"
+	"shared/telemetry"
 
 	"buf.build/go/protovalidate"
 	"github.com/exaring/otelpgx"
@@ -176,7 +177,7 @@ func initAuthModule(grpcServer, privateGRPCServer *grpc.Server, db *pgxpool.Pool
 	credentialRepo := postgres.NewCredentialRepo(querier)
 	sessionRepo := postgres.NewSessionRepo(querier)
 
-	tokenIssuer := jwt.NewIssuer([]byte(os.Getenv("user_JWT_SECRET_KEY")), cfg.JWT.AccessTTL, cfg.JWT.Issuer)
+	tokenIssuer := jwt.NewIssuer([]byte(os.Getenv("USER_SERVICE_JWT_SECRET_KEY")), cfg.JWT.AccessTTL, cfg.JWT.Issuer)
 
 	authServer := application.NewAuthService(
 		unitOfWork,

@@ -10,6 +10,12 @@ import (
 	"user/internal/config"
 )
 
+const envPrefix = "USER_SERVICE"
+
+func fetchAppEnv() string {
+	return os.Getenv("USER_SERVICE_ENV")
+}
+
 func fetchConfigDir(prefix string) string {
 	var res string
 
@@ -29,10 +35,9 @@ func fetchConfigDir(prefix string) string {
 }
 
 func main() {
-	prefix := "MOVEGO"
-	configDir := fetchConfigDir(prefix)
-	env := os.Getenv("APP_ENV")
-	cfg, err := config.Load(configDir, env, prefix)
+	configDir := fetchConfigDir(envPrefix)
+	env := fetchAppEnv()
+	cfg, err := config.Load(configDir, env, envPrefix)
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}

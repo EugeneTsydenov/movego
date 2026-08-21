@@ -1,12 +1,12 @@
 app:
-  name: "movego-backend"
+  name: "movego-user"
   shutdown_timeout: "15s"
   log_level: "debug"
 
 database:
   host: "postgres"
   port: 5432
-  name: "movego_dev"
+  name: "movego_user"
   user: "postgres"
   driver: "postgres"
   ssl_mode: "disable"

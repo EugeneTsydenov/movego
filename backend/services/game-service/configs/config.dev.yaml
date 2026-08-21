@@ -1,0 +1,29 @@
+app:
+  name: "movego-game"
+  shutdown_timeout: "15s"
+  log_level: "debug"
+
+redis:
+  addr: "0.0.0.0:6379"
+  password: redis
+  username: redis
+  db: 2
+  pool_size: 50
+  min_idle_conns: 10
+  conn_max_idle_time: "5m"
+  dial_timeout: "5s"
+  read_timeout: "3s"
+  write_timeout: "3s"
+  max_retries: 3
+
+server:
+  host: "0.0.0.0"
+  port: 8082
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "60s"
+  shutdown_timeout: "2s"
+
+otel:
+  endpoint: "tempo:4317"
+  metrics_port: 2113

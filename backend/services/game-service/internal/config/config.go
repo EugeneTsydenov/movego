@@ -1,8 +1,9 @@
 package config
 
 import (
-	sharedconfig "shared/config"
 	"time"
+
+	sharedconfig "shared/config"
 )
 
 type Config struct {
@@ -12,32 +13,28 @@ type Config struct {
 		LogLevel        string        `mapstructure:"log_level"`
 	} `mapstructure:"app"`
 
-	Database struct {
-		Host     string `mapstructure:"host"`
-		Port     int    `mapstructure:"port"`
-		Name     string `mapstructure:"name"`
-		User     string `mapstructure:"user"`
-		Password string `mapstructure:"password"`
-		Driver   string `mapstructure:"driver"`
-		SSLMode  string `mapstructure:"ssl_mode"`
-		MaxConn  int    `mapstructure:"max_conn"`
-	} `mapstructure:"database"`
+	Redis struct {
+		Addr            string        `mapstructure:"addr"`
+		Username        string        `mapstructure:"username"`
+		Password        string        `mapstructure:"password"`
+		DB              int           `mapstructure:"db"`
+		PoolSize        int           `mapstructure:"pool_size"`
+		MinIdleConns    int           `mapstructure:"min_idle_conns"`
+		ConnMaxIdleTime time.Duration `mapstructure:"conn_max_idle_time"`
+		DialTimeout     time.Duration `mapstructure:"dial_timeout"`
+		ReadTimeout     time.Duration `mapstructure:"read_timeout"`
+		WriteTimeout    time.Duration `mapstructure:"write_timeout"`
+		MaxRetries      int           `mapstructure:"max_retries"`
+	} `mapstructure:"redis"`
 
 	Server struct {
 		Host            string        `mapstructure:"host" json:"host"`
 		Port            int           `mapstructure:"port" json:"port"`
-		PrivatePort     int           `mapstructure:"private_port" json:"private_port"`
 		ReadTimeout     time.Duration `mapstructure:"read_timeout" json:"read_timeout"`
 		WriteTimeout    time.Duration `mapstructure:"write_timeout" json:"write_timeout"`
 		IdleTimeout     time.Duration `mapstructure:"idle_timeout" json:"idle_timeout"`
 		ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout"`
 	} `mapstructure:"server"`
-
-	JWT struct {
-		RefreshTTL time.Duration `mapstructure:"refresh_ttl"`
-		AccessTTL  time.Duration `mapstructure:"access_ttl"`
-		Issuer     string        `mapstructure:"issuer"`
-	} `mapstructure:"jwt"`
 
 	Otel struct {
 		Endpoint    string `mapstructure:"endpoint"`
@@ -47,7 +44,6 @@ type Config struct {
 
 func Load(configDir, appEnv, prefix string) (*Config, error) {
 	var cfg Config
-	cfg.Database.Password = ""
 	if err := sharedconfig.Load(configDir, appEnv, prefix, &cfg); err != nil {
 		return nil, err
 	}

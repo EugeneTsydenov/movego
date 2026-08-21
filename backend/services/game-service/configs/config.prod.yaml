@@ -1,0 +1,29 @@
+app:
+  name: "movego-game"
+  shutdown_timeout: "15s"
+  log_level: "warn"
+
+redis:
+  addr: "0.0.0.0:6379"
+  password: redis
+  username: redis
+  db: 2
+  pool_size: 50
+  min_idle_conns: 10
+  conn_max_idle_time: "5m"
+  dial_timeout: "5s"
+  read_timeout: "3s"
+  write_timeout: "3s"
+  max_retries: 3
+
+server:
+  host: "0.0.0.0"
+  port: 9090
+  read_timeout: "5s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "15s"
+
+otel:
+  endpoint: "loki:4317"
+  metrics_port: 2112

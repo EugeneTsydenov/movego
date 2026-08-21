@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  app:
+  user-service:
     build:
       context: .
       dockerfile: ./services/user-service/Dockerfile
@@ -10,8 +10,25 @@ services:
       - "2112:2112"
       - "8081:8081"
     environment:
-      - APP_ENV=dev
-      - MOVEGO_DATABASE_PASSWORD=postgres
+      - USER_SERVICE_ENV=dev
+      - USER_SERVICE_DATABASE_PASSWORD=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  game-service:
+    build:
+      context: .
+      dockerfile: ./services/game-service/Dockerfile
+    ports:
+      - "8082:8080"
+      - "2113:2112"
+    environment:
+      - GAME_SERVICE_ENV=dev
+      - GAME_SERVICE_DATABASE_PASSWORD=postgres
+      - GAME_SERVICE_REDIS_PASSWORD=redis
     depends_on:
       postgres:
         condition: service_healthy
@@ -24,11 +41,12 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: movego_dev
+      POSTGRES_DB: movego_user
     ports:
       - "5432:5432"
     volumes:
       - pgdata_dev:/var/lib/postgresql/data
+      - ./deployments/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s
@@ -38,6 +56,25 @@ services:
       app-network:
         aliases:
           - postgres
+
+  redis:
+    image: redis:7-alpine
+    container_name: movego_redis_dev
+    command: [
+      "redis-server",
+      "--user", "default", "off",
+      "--user", "redis", "on", ">redis", "~*", "&*", "+@all"
+    ]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-network
 
   grafana:
     image: grafana/grafana:latest
