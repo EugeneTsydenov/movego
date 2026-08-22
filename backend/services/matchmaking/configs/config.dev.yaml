@@ -1,0 +1,25 @@
+app:
+  name: "movego-matchmaking"
+  shutdown_timeout: "15s"
+  log_level: "warn"
+
+database:
+  host: "postgres"
+  port: 5432
+  name: "movego_matchmaking"
+  user: "postgres"
+  driver: "postgres"
+  ssl_mode: "require"
+  max_conn: 25
+
+server:
+  host: "0.0.0.0"
+  port: 8070
+  read_timeout: "5s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "15s"
+
+otel:
+  endpoint: "tempo:4317"
+  metrics_port: 2102

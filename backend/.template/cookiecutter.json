@@ -1,0 +1,5 @@
+{
+  "service_name": "user",
+  "port": "8080",
+  "metrics_port": "2112"
+}

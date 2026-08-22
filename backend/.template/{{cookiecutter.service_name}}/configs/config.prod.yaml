@@ -1,0 +1,25 @@
+app:
+  name: "movego-{{cookiecutter.service_name}}"
+  shutdown_timeout: "15s"
+  log_level: "warn"
+
+database:
+  host: "postgres"
+  port: 5432
+  name: "movego_{{cookiecutter.service_name}}"
+  user: "postgres"
+  driver: "postgres"
+  ssl_mode: "require"
+  max_conn: 25
+
+server:
+  host: "0.0.0.0"
+  port: {{cookiecutter.port}}
+  read_timeout: "5s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "15s"
+
+otel:
+  endpoint: "tempo:4317"
+  metrics_port: {{cookiecutter.metrics_port}}
