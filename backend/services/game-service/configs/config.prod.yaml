@@ -7,7 +7,7 @@ redis:
   addr: "0.0.0.0:6379"
   password: redis
   username: redis
-  db: 2
+  db: 0
   pool_size: 50
   min_idle_conns: 10
   conn_max_idle_time: "5m"

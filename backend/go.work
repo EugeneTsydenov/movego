@@ -3,5 +3,6 @@ go 1.25.3
 use (
     ./gen
     ./services/user-service
+    ./services/game-service
     ./shared
 )

@@ -16,6 +16,7 @@ func Load(configDir, appEnv, prefix string, cfg any) error {
 	v.AutomaticEnv()
 
 	v.SetDefault("database.password", "")
+	v.SetDefault("redis.password", "")
 	v.AddConfigPath(configDir)
 	v.SetConfigType("yaml")
 

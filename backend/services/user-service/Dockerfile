@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY go.work go.work.sum ./
 COPY services/user-service/go.mod services/user-service/go.sum ./services/user-service/
+COPY services/game-service/go.mod services/game-service/go.sum ./services/game-service/
 COPY gen/go.mod gen/go.sum ./gen/
 COPY shared/go.mod ./shared/
 

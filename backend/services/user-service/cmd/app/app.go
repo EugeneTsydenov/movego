@@ -16,6 +16,7 @@ import (
 	"user/internal/application"
 	"user/internal/config"
 
+	sharedinterceptor "shared/interceptor"
 	"shared/logger"
 	"shared/telemetry"
 
@@ -150,9 +151,9 @@ func initPublicGRPCServer(appLogger *slog.Logger) *grpc.Server {
 	return grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
-			grpcadapter.LoggingInterceptor(appLogger),
+			sharedinterceptor.LoggingInterceptor(appLogger),
 			grpcadapter.ErrorInterceptor(),
-			grpcadapter.ValidationUnaryInterceptor(validator),
+			sharedinterceptor.ValidationUnaryInterceptor(validator),
 		),
 	)
 }
@@ -163,9 +164,9 @@ func initPrivateGRPCServer(appLogger *slog.Logger) *grpc.Server {
 	return grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
-			grpcadapter.LoggingInterceptor(appLogger),
+			sharedinterceptor.LoggingInterceptor(appLogger),
 			grpcadapter.ErrorInterceptor(),
-			grpcadapter.ValidationUnaryInterceptor(validator),
+			sharedinterceptor.ValidationUnaryInterceptor(validator),
 			grpcadapter.AuthContextInterceptor(),
 		),
 	)

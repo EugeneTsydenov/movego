@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	gamev1 "protogen/game/v1"
 
+	grpcadapter "game/internal/adapters/grpc"
 	redisadapter "game/internal/adapters/redis"
 	"game/internal/application"
 	"game/internal/config"
 
+	sharedinterceptor "shared/interceptor"
 	"shared/logger"
 	"shared/telemetry"
 
@@ -133,13 +136,18 @@ func initGRPCServer(appLogger *slog.Logger) *grpc.Server {
 	validator, _ := protovalidate.New()
 	return grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		grpc.ChainStreamInterceptor(),
+		grpc.ChainUnaryInterceptor(
+			sharedinterceptor.LoggingInterceptor(appLogger),
+			grpcadapter.ErrorInterceptor(),
+			sharedinterceptor.ValidationUnaryInterceptor(validator),
+		),
 	)
 }
 
 func initGameModule(cfg *config.Config, server *grpc.Server, redisClient *redis.Client, appLogger *slog.Logger) {
 	gameRepository := redisadapter.NewGameRepository(redisClient)
 	gameService := application.NewGameService(gameRepository)
+	gamev1.RegisterGameServiceServer(server, grpcadapter.NewGameHandler(gameService))
 }
 
 func (a *app) Run() error {

@@ -1,0 +1,73 @@
+package interceptor
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+
+	"buf.build/go/protovalidate"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+)
+
+func LoggingInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		resp, err := handler(ctx, req)
+		if err != nil {
+			st, _ := status.FromError(err)
+
+			switch st.Code() {
+			case codes.InvalidArgument, codes.Unauthenticated, codes.NotFound, codes.AlreadyExists, codes.PermissionDenied:
+				log.InfoContext(ctx, "grpc business error",
+					slog.String("method", info.FullMethod),
+					slog.String("code", st.Code().String()),
+					slog.String("error", err.Error()),
+				)
+			default:
+				log.ErrorContext(ctx, "system error",
+					slog.String("method", info.FullMethod),
+					slog.String("code", st.Code().String()),
+					slog.String("error", err.Error()),
+				)
+			}
+
+			return resp, err
+		}
+
+		log.InfoContext(ctx, "grpc request success",
+			slog.String("method", info.FullMethod),
+		)
+		return resp, err
+	}
+}
+
+func ValidationUnaryInterceptor(v protovalidate.Validator) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+		if msg, ok := req.(proto.Message); ok {
+			if err := v.Validate(msg); err != nil {
+				var valErr *protovalidate.ValidationError
+				if errors.As(err, &valErr) {
+					br := &errdetails.BadRequest{}
+
+					for _, violation := range valErr.Violations {
+						br.FieldViolations = append(br.FieldViolations, &errdetails.BadRequest_FieldViolation{
+							Field:       string(violation.FieldDescriptor.Name()),
+							Description: violation.String(),
+						})
+					}
+
+					st := status.New(codes.InvalidArgument, err.Error())
+					stWithDetails, _ := st.WithDetails(br)
+					return nil, stWithDetails.Err()
+				}
+
+				return nil, status.Error(codes.InvalidArgument, err.Error())
+			}
+		}
+
+		return handler(ctx, req)
+	}
+}

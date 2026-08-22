@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY go.work go.work.sum ./
 COPY services/game-service/go.mod services/game-service/go.sum ./services/game-service/
+COPY services/user-service/go.mod services/user-service/go.sum ./services/user-service/
 COPY gen/go.mod gen/go.sum ./gen/
 COPY shared/go.mod ./shared/
 
@@ -23,7 +24,7 @@ RUN apk --no-cache add ca-certificates tzdata
 COPY --from=builder /app/bin/server /app/server
 COPY --from=builder /app/services/game-service/configs /app/configs
 
-EXPOSE 8082
-EXPOSE 2113
+EXPOSE 8090
+EXPOSE 2121
 
 CMD ["/app/server", "--config=configs"]
