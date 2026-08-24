@@ -6,6 +6,7 @@ COPY go.work go.work.sum ./
 COPY services/game/go.mod services/game/go.sum ./services/game/
 COPY services/user/go.mod services/user/go.sum ./services/user/
 COPY services/matchmaking/go.mod services/matchmaking/go.sum ./services/matchmaking/
+COPY services/notification/go.mod services/notification/go.sum ./services/notification/
 COPY gen/go.mod gen/go.sum ./gen/
 COPY shared/go.mod ./shared/
 
