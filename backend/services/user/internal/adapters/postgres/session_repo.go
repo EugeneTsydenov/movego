@@ -3,10 +3,10 @@ package postgres
 import (
 	"context"
 	"errors"
+	"shared/coreerrors"
 	"user/internal/adapters/postgres/sqlc"
 	"user/internal/domain"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -27,20 +27,24 @@ func (r *SessionRepo) Save(ctx context.Context, session *domain.Session) error {
 	return mapSessionError(err)
 }
 
-func (r *SessionRepo) FindValid(ctx context.Context, sessionID uuid.UUID) (*domain.Session, *domain.User, error) {
-	row, err := r.querier.FindValid(ctx, sessionID)
+func (r *SessionRepo) FindValid(ctx context.Context, sessionID domain.SessionID) (*domain.Session, *domain.User, error) {
+	row, err := r.querier.FindValid(ctx, sessionID.UUID())
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil, domain.ErrNotFound
+			return nil, nil, coreerrors.ErrNotFound
 		}
 		return nil, nil, err
 	}
 
-	return toDomainFindValidRow(row)
+	session, user, err := toDomainFindValidRow(row)
+	if err != nil {
+		return nil, nil, err
+	}
+	return session, user, nil
 }
 
-func (r *SessionRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.Session, error) {
-	session, err := r.querier.FindByID(ctx, id)
+func (r *SessionRepo) FindByID(ctx context.Context, id domain.SessionID) (*domain.Session, error) {
+	session, err := r.querier.FindByID(ctx, id.UUID())
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrSessionNotFound
@@ -49,25 +53,35 @@ func (r *SessionRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.Sessi
 		return nil, err
 	}
 
-	return toDomainSession(session), nil
-}
-
-func (r *SessionRepo) ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]*domain.Session, error) {
-	rows, err := r.querier.ListActiveByUserID(ctx, userID)
+	s, err := toDomainSession(session)
 	if err != nil {
 		return nil, err
 	}
 
-	return toDomainSessionList(rows), nil
+	return s, nil
 }
 
-func (r *SessionRepo) Delete(ctx context.Context, sessionID uuid.UUID) error {
-	return r.querier.Delete(ctx, sessionID)
+func (r *SessionRepo) ListActiveByUserID(ctx context.Context, userID domain.UserID) ([]*domain.Session, error) {
+	rows, err := r.querier.ListActiveByUserID(ctx, userID.UUID())
+	if err != nil {
+		return nil, err
+	}
+
+	sessions, err := toDomainSessionList(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return sessions, nil
 }
 
-func (r *SessionRepo) DeleteAllExcept(ctx context.Context, userID, sessionID uuid.UUID) error {
+func (r *SessionRepo) Delete(ctx context.Context, sessionID domain.SessionID) error {
+	return r.querier.Delete(ctx, sessionID.UUID())
+}
+
+func (r *SessionRepo) DeleteAllExcept(ctx context.Context, userID domain.UserID, sessionID domain.SessionID) error {
 	return r.querier.DeleteAllExcept(ctx, sqlc.DeleteAllExceptParams{
-		ID:     sessionID,
-		UserID: userID,
+		ID:     sessionID.UUID(),
+		UserID: userID.UUID(),
 	})
 }

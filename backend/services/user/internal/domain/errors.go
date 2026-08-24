@@ -1,57 +1,30 @@
 package domain
 
-import (
-	"errors"
-)
-
-// Kind Errors
-var (
-	ErrNotFound       = errors.New("not found")
-	ErrAlreadyExists  = errors.New("already exists")
-	ErrValidation     = errors.New("validation failed")
-	ErrAuthentication = errors.New("authentication failed")
-)
-
-type domainError struct {
-	kind    error
-	message string
-}
-
-func (e *domainError) Error() string {
-	return e.message
-}
-
-func (e *domainError) Unwrap() error {
-	return e.kind
-}
-
-func newErr(kind error, message string) error {
-	return &domainError{
-		kind:    kind,
-		message: message,
-	}
-}
+import "shared/coreerrors"
 
 var (
 	// Not Found
-	ErrUserNotFound       = newErr(ErrNotFound, "user not found")
-	ErrSessionNotFound    = newErr(ErrNotFound, "session not found")
-	ErrCredentialNotFound = newErr(ErrNotFound, "credential not found")
+	ErrUserNotFound       = coreerrors.New(coreerrors.ErrNotFound, "user not found")
+	ErrSessionNotFound    = coreerrors.New(coreerrors.ErrNotFound, "session not found")
+	ErrCredentialNotFound = coreerrors.New(coreerrors.ErrNotFound, "credential not found")
 
 	// Already Exists
-	ErrEmailTaken            = newErr(ErrAlreadyExists, "email is already taken")
-	ErrTagTaken              = newErr(ErrAlreadyExists, "tag is already taken")
-	ErrProviderAlreadyLinked = newErr(ErrAlreadyExists, "provider is already linked")
-	ErrProviderKeyTaken      = newErr(ErrAlreadyExists, "social account is already linked")
+	ErrEmailTaken            = coreerrors.New(coreerrors.ErrAlreadyExists, "email is already taken")
+	ErrTagTaken              = coreerrors.New(coreerrors.ErrAlreadyExists, "tag is already taken")
+	ErrProviderAlreadyLinked = coreerrors.New(coreerrors.ErrAlreadyExists, "provider is already linked")
+	ErrProviderKeyTaken      = coreerrors.New(coreerrors.ErrAlreadyExists, "social account is already linked")
 
 	// Validation
-	ErrInvalidDisplayName = newErr(ErrValidation, "invalid display name")
-	ErrInvalidEmail       = newErr(ErrValidation, "invalid email")
-	ErrInvalidTag         = newErr(ErrValidation, "invalid tag")
-	ErrWeakPassword       = newErr(ErrValidation, "password is too weak")
-	ErrInvalidRole        = newErr(ErrValidation, "invalid role")
-	ErrInvalidProvider    = newErr(ErrValidation, "invalid provider")
+	ErrInvalidUserID       = coreerrors.New(coreerrors.ErrValidation, "invalid user id")
+	ErrInvalidSessionID    = coreerrors.New(coreerrors.ErrValidation, "invalid session id")
+	ErrInvalidCredentialID = coreerrors.New(coreerrors.ErrValidation, "invalid credential id")
+	ErrInvalidDisplayName  = coreerrors.New(coreerrors.ErrValidation, "invalid display name")
+	ErrInvalidEmail        = coreerrors.New(coreerrors.ErrValidation, "invalid email")
+	ErrInvalidTag          = coreerrors.New(coreerrors.ErrValidation, "invalid tag")
+	ErrWeakPassword        = coreerrors.New(coreerrors.ErrValidation, "password is too weak")
+	ErrInvalidRole         = coreerrors.New(coreerrors.ErrValidation, "invalid role")
+	ErrInvalidProvider     = coreerrors.New(coreerrors.ErrValidation, "invalid provider")
 
 	// Authentication
-	ErrInvalidCredentials = newErr(ErrAuthentication, "invalid credentials")
+	ErrInvalidCredentials = coreerrors.New(coreerrors.ErrAuth, "invalid credentials")
 )

@@ -18,7 +18,7 @@ const (
 
 type Game struct {
 	*chess.Game
-	id                 uuid.UUID
+	id                 GameID
 	whitePlayer        *Player
 	blackPlayer        *Player
 	status             GameStatus
@@ -34,7 +34,7 @@ func NewGame(whitePlayer, blackPlayer *Player, timeControl TimeControl) *Game {
 	now := time.Now().UTC()
 	initialTime, _ := timeControl.Duration()
 	return &Game{
-		id:                 uuid.Must(uuid.NewV7()),
+		id:                 GameID(uuid.Must(uuid.NewV7())),
 		Game:               chess.NewGame(),
 		whitePlayer:        whitePlayer,
 		blackPlayer:        blackPlayer,
@@ -48,7 +48,7 @@ func NewGame(whitePlayer, blackPlayer *Player, timeControl TimeControl) *Game {
 }
 
 func RestoreGame(
-	id uuid.UUID,
+	id GameID,
 	whitePlayer *Player,
 	blackPlayer *Player,
 	status GameStatus,
@@ -92,7 +92,7 @@ func RestoreGame(
 	}, nil
 }
 
-func (g *Game) ID() uuid.UUID {
+func (g *Game) ID() GameID {
 	return g.id
 }
 
@@ -132,6 +132,6 @@ func (g *Game) FinishedAt() time.Time {
 	return g.finishedAt
 }
 
-func (g *Game) IsPlayer(playerID uuid.UUID) bool {
+func (g *Game) IsPlayer(playerID PlayerID) bool {
 	return g.whitePlayer.ID() == playerID || g.blackPlayer.ID() == playerID
 }

@@ -1,23 +1,27 @@
 package domain
 
-import "github.com/google/uuid"
-
 type Player struct {
-	id   uuid.UUID
-	name string
+	id     PlayerID
+	name   string
+	rating Rating
 }
 
-func NewPlayer(id uuid.UUID, name string) *Player {
+func NewPlayer(id PlayerID, name string, rating Rating) *Player {
 	return &Player{
-		id:   id,
-		name: name,
+		id:     id,
+		name:   name,
+		rating: rating,
 	}
 }
 
-func (p *Player) ID() uuid.UUID {
+func (p *Player) ID() PlayerID {
 	return p.id
 }
 
 func (p *Player) Name() string {
 	return p.name
+}
+
+func (p *Player) Rating() Rating {
+	return p.rating
 }

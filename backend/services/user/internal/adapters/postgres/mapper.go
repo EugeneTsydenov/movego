@@ -54,8 +54,8 @@ func fromPgTimestampzPtr(v pgtype.Timestamptz) *time.Time {
 
 func toSaveCredentialsParams(cred *domain.Credential) sqlc.SaveCredentialParams {
 	return sqlc.SaveCredentialParams{
-		ID:           cred.ID(),
-		UserID:       cred.UserID(),
+		ID:           cred.ID().UUID(),
+		UserID:       cred.UserID().UUID(),
 		PasswordHash: toPgTextPtr(cred.PasswordHash()),
 		Provider:     cred.Provider().String(),
 		ProviderKey:  toPgTextPtr(cred.ProviderKey()),
@@ -64,8 +64,8 @@ func toSaveCredentialsParams(cred *domain.Credential) sqlc.SaveCredentialParams 
 
 func toSaveSessionsParams(session *domain.Session) sqlc.SaveSessionParams {
 	return sqlc.SaveSessionParams{
-		ID:           session.ID(),
-		UserID:       session.UserID(),
+		ID:           session.ID().UUID(),
+		UserID:       session.UserID().UUID(),
 		SecretHash:   session.SecretHash(),
 		UserAgent:    session.UserAgent(),
 		ClientIp:     session.ClientIP(),
@@ -77,7 +77,7 @@ func toSaveSessionsParams(session *domain.Session) sqlc.SaveSessionParams {
 
 func toSaveUsersParams(user *domain.User) sqlc.SaveUserParams {
 	return sqlc.SaveUserParams{
-		ID:          user.ID(),
+		ID:          user.ID().UUID(),
 		Email:       user.Email().String(),
 		Tag:         user.Tag().String(),
 		DisplayName: user.DisplayName().String(),
@@ -88,20 +88,35 @@ func toSaveUsersParams(user *domain.User) sqlc.SaveUserParams {
 	}
 }
 
-func toDomainSession(session sqlc.Sessions) *domain.Session {
+func toDomainSession(session sqlc.Sessions) (*domain.Session, error) {
+	sessionID, err := domain.NewSessionID(session.ID.String())
+	if err != nil {
+		return nil, fmt.Errorf("map session id: %v", err)
+	}
+
+	userID, err := domain.NewUserID(session.UserID.String())
+	if err != nil {
+		return nil, fmt.Errorf("map user id: %v", err)
+	}
+
 	return domain.RestoreSession(
-		session.ID,
-		session.UserID,
+		sessionID,
+		userID,
 		session.SecretHash,
 		session.UserAgent,
 		session.ClientIp,
 		session.LastActiveAt,
 		session.ExpiresAt,
 		session.CreatedAt,
-	)
+	), nil
 }
 
 func toDomainUser(row sqlc.Users) (*domain.User, error) {
+	id, err := domain.NewUserID(row.ID.String())
+	if err != nil {
+		return nil, fmt.Errorf("map user id: %v", err)
+	}
+
 	email, err := domain.NewEmail(row.Email)
 	if err != nil {
 		return nil, fmt.Errorf("map email: %v", err)
@@ -123,7 +138,7 @@ func toDomainUser(row sqlc.Users) (*domain.User, error) {
 	}
 
 	return domain.RestoreUser(
-		row.ID,
+		id,
 		email,
 		tag,
 		displayName,
@@ -135,14 +150,24 @@ func toDomainUser(row sqlc.Users) (*domain.User, error) {
 }
 
 func toDomainCredential(row sqlc.Credentials) (*domain.Credential, error) {
+	id, err := domain.NewCredentialID(row.ID.String())
+	if err != nil {
+		return nil, fmt.Errorf("map credential id: %v", err)
+	}
+
+	userID, err := domain.NewUserID(row.UserID.String())
+	if err != nil {
+		return nil, fmt.Errorf("map user id: %v", err)
+	}
+
 	provider, err := domain.NewProvider(row.Provider)
 	if err != nil {
 		return nil, fmt.Errorf("map provider: %v", err)
 	}
 
 	return domain.RestoreCredential(
-		row.ID,
-		row.UserID,
+		id,
+		userID,
 		provider,
 		fromPgTextPtr(row.PasswordHash),
 		fromPgTextPtr(row.ProviderKey),
@@ -175,14 +200,21 @@ func toDomainFindValidRow(row sqlc.FindValidRow) (*domain.Session, *domain.User,
 	if err != nil {
 		return nil, nil, err
 	}
-	session := toDomainSession(row.Sessions)
+	session, err := toDomainSession(row.Sessions)
+	if err != nil {
+		return nil, nil, err
+	}
 	return session, user, nil
 }
 
-func toDomainSessionList(rows []sqlc.Sessions) []*domain.Session {
+func toDomainSessionList(rows []sqlc.Sessions) ([]*domain.Session, error) {
 	sessions := make([]*domain.Session, len(rows))
 	for i, row := range rows {
-		sessions[i] = toDomainSession(row)
+		session, err := toDomainSession(row)
+		if err != nil {
+			return nil, err
+		}
+		sessions[i] = session
 	}
-	return sessions
+	return sessions, nil
 }

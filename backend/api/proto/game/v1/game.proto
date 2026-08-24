@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package game.v1;
 
-option go_package = "game/gen/go/game/v1;gamev1";
+option go_package = "gen/game/v1;gamev1";
 
 import "buf/validate/validate.proto";
 
@@ -12,14 +12,18 @@ service GameService {
 }
 
 message Player {
-    string id = 1 [(buf.validate.field).string.uuid = true];
-    string name = 2;
+    string id = 1 [(buf.validate.field).required = true, (buf.validate.field).string.uuid = true];
+    string name = 2 [(buf.validate.field).required = true];
+    int32 rating = 3 [(buf.validate.field).required = true, (buf.validate.field).int32.gte = 0];
 }
 
 message CreateGameRequest {
     Player white_player = 1;
     Player black_player = 2;
-    string time_control_id = 3;
+    string time_control_id = 3 [
+        (buf.validate.field).required = true,
+        (buf.validate.field).string.pattern = "^\\d+\\+\\d+$"
+    ];
 }
 
 message CreateGameResponse {

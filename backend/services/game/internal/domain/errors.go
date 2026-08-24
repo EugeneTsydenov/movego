@@ -1,37 +1,14 @@
 package domain
 
-import (
-	"errors"
-)
-
-// Kind Errors
-var (
-	ErrValidation = errors.New("validation failed")
-	ErrNotFound   = errors.New("not found")
-)
-
-type domainError struct {
-	kind    error
-	message string
-}
-
-func (e *domainError) Error() string {
-	return e.message
-}
-
-func (e *domainError) Unwrap() error {
-	return e.kind
-}
-
-func newErr(kind error, message string) error {
-	return &domainError{
-		kind:    kind,
-		message: message,
-	}
-}
+import "shared/coreerrors"
 
 var (
 	// Validation
-	ErrInvalidTimeControl = newErr(ErrValidation, "invalid time control")
-	ErrGameNotFound       = newErr(ErrNotFound, "game not found")
+	ErrInvalidTimeControlID = coreerrors.New(coreerrors.ErrValidation, "invalid time control")
+	ErrInvalidPlayerID      = coreerrors.New(coreerrors.ErrValidation, "invalid player id")
+	ErrInvalidGameID        = coreerrors.New(coreerrors.ErrValidation, "invalid game id")
+	ErrInvalidRating        = coreerrors.New(coreerrors.ErrValidation, "invalid rating")
+
+	// NotFound
+	ErrGameNotFound = coreerrors.New(coreerrors.ErrNotFound, "game not found")
 )

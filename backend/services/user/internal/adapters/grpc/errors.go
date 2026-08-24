@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"errors"
+	"shared/coreerrors"
 	"user/internal/domain"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -42,13 +43,13 @@ func mapDomainErrorToGRPC(err error) error {
 	}
 
 	switch {
-	case errors.Is(err, domain.ErrAlreadyExists):
+	case errors.Is(err, coreerrors.ErrAlreadyExists):
 		return status.Error(codes.AlreadyExists, err.Error())
-	case errors.Is(err, domain.ErrNotFound):
+	case errors.Is(err, coreerrors.ErrNotFound):
 		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, domain.ErrValidation):
+	case errors.Is(err, coreerrors.ErrValidation):
 		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, domain.ErrAuthentication):
+	case errors.Is(err, coreerrors.ErrNotFound):
 		return status.Error(codes.Unauthenticated, err.Error())
 	}
 

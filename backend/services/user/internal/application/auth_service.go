@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"shared/coreerrors"
 	"strings"
 	"time"
 	"user/internal/domain"
 	"user/internal/pkg/secret"
-
-	"github.com/google/uuid"
 )
 
 type AuthService struct {
@@ -41,17 +40,7 @@ func NewAuthService(
 }
 
 func (s *AuthService) SignUp(ctx context.Context, in SignUpInput) (SignUpOutput, error) {
-	email, err := domain.NewEmail(in.Email)
-	if err != nil {
-		return SignUpOutput{}, err
-	}
-
-	password, err := domain.NewPlainPassword(in.Password)
-	if err != nil {
-		return SignUpOutput{}, err
-	}
-
-	hash, err := secret.HashPassword(password.String())
+	hash, err := secret.HashPassword(in.Password.String())
 	if err != nil {
 		return SignUpOutput{}, err
 	}
@@ -61,7 +50,7 @@ func (s *AuthService) SignUp(ctx context.Context, in SignUpInput) (SignUpOutput,
 		return SignUpOutput{}, err
 	}
 
-	user := domain.NewTemporaryUser(email, domain.RoleUser)
+	user := domain.NewTemporaryUser(in.Email, domain.RoleUser)
 	var session *domain.Session
 	err = s.uow.Do(ctx, func(repos domain.Repos) error {
 		err = repos.Users().Save(ctx, user)
@@ -88,8 +77,8 @@ func (s *AuthService) SignUp(ctx context.Context, in SignUpInput) (SignUpOutput,
 	}
 
 	token, err := s.tokenIssuer.Issue(TokenClaims{
-		Sub:       user.ID(),
-		SessionID: session.ID(),
+		Sub:       user.ID().UUID(),
+		SessionID: session.ID().UUID(),
 		Roles:     []string{domain.RoleUser.String()},
 	})
 	if err != nil {
@@ -99,10 +88,10 @@ func (s *AuthService) SignUp(ctx context.Context, in SignUpInput) (SignUpOutput,
 	return SignUpOutput{
 		User: UserDTO{
 			ID:          user.ID(),
-			Tag:         user.Tag().String(),
-			Email:       email.String(),
-			DisplayName: user.DisplayName().String(),
-			Role:        domain.RoleUser.String(),
+			Tag:         user.Tag(),
+			Email:       user.Email(),
+			DisplayName: user.DisplayName(),
+			Role:        domain.RoleUser,
 			UpdatedAt:   user.UpdatedAt(),
 			CreatedAt:   user.CreatedAt(),
 		},
@@ -112,19 +101,9 @@ func (s *AuthService) SignUp(ctx context.Context, in SignUpInput) (SignUpOutput,
 }
 
 func (s *AuthService) SignIn(ctx context.Context, in SignInInput) (SignInOutput, error) {
-	email, err := domain.NewEmail(in.Email)
+	user, credential, err := s.credentialRepo.FindForAuth(ctx, in.Email, domain.Password)
 	if err != nil {
-		return SignInOutput{}, err
-	}
-
-	password, err := domain.NewPlainPassword(in.Password)
-	if err != nil {
-		return SignInOutput{}, err
-	}
-
-	user, credential, err := s.credentialRepo.FindForAuth(ctx, email, domain.Password)
-	if err != nil {
-		if errors.Is(err, domain.ErrNotFound) {
+		if errors.Is(err, coreerrors.ErrNotFound) {
 			return SignInOutput{}, domain.ErrInvalidCredentials
 		}
 
@@ -132,7 +111,7 @@ func (s *AuthService) SignIn(ctx context.Context, in SignInInput) (SignInOutput,
 	}
 
 	hash := credential.PasswordHash()
-	if hash == nil || !secret.CheckPasswordHash(password.String(), *hash) {
+	if hash == nil || !secret.CheckPasswordHash(in.Password.String(), *hash) {
 		return SignInOutput{}, domain.ErrInvalidCredentials
 	}
 
@@ -148,8 +127,8 @@ func (s *AuthService) SignIn(ctx context.Context, in SignInInput) (SignInOutput,
 	}
 
 	token, err := s.tokenIssuer.Issue(TokenClaims{
-		Sub:       user.ID(),
-		SessionID: session.ID(),
+		Sub:       user.ID().UUID(),
+		SessionID: session.ID().UUID(),
 		Roles:     []string{user.Role().String()},
 	})
 	if err != nil {
@@ -159,10 +138,10 @@ func (s *AuthService) SignIn(ctx context.Context, in SignInInput) (SignInOutput,
 	return SignInOutput{
 		User: UserDTO{
 			ID:          user.ID(),
-			Tag:         user.Tag().String(),
-			Email:       email.String(),
-			DisplayName: user.DisplayName().String(),
-			Role:        user.Role().String(),
+			Tag:         user.Tag(),
+			Email:       user.Email(),
+			DisplayName: user.DisplayName(),
+			Role:        user.Role(),
 			UpdatedAt:   user.UpdatedAt(),
 			CreatedAt:   user.CreatedAt(),
 		},
@@ -178,14 +157,14 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (RefreshOutp
 	}
 	sessionIDStr := parts[0]
 	secrStr := parts[1]
-	sessionID, err := uuid.Parse(sessionIDStr)
+	sessionID, err := domain.NewSessionID(sessionIDStr)
 	if err != nil {
 		return RefreshOutput{}, domain.ErrInvalidCredentials
 	}
 
 	oldSession, user, err := s.sessionRepo.FindValid(ctx, sessionID)
 	if err != nil {
-		if errors.Is(err, domain.ErrNotFound) {
+		if errors.Is(err, coreerrors.ErrNotFound) {
 			return RefreshOutput{}, domain.ErrInvalidCredentials
 		}
 
@@ -218,8 +197,9 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (RefreshOutp
 	}
 
 	token, err := s.tokenIssuer.Issue(TokenClaims{
-		Sub:   user.ID(),
-		Roles: []string{user.Role().String()},
+		Sub:       user.ID().UUID(),
+		SessionID: session.ID().UUID(),
+		Roles:     []string{user.Role().String()},
 	})
 	if err != nil {
 		return RefreshOutput{}, err
@@ -238,7 +218,7 @@ func (s *AuthService) SignOut(ctx context.Context, in SignOutInput) error {
 	}
 	sessionIDStr := parts[0]
 
-	sessionID, err := uuid.Parse(sessionIDStr)
+	sessionID, err := domain.NewSessionID(sessionIDStr)
 	if err != nil {
 		return nil
 	}

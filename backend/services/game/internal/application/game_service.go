@@ -6,24 +6,22 @@ import (
 )
 
 type GameService struct {
-	gameRepository domain.GameRepository
+	gameRepo domain.GameRepo
 }
 
-func NewGameService(gameRepository domain.GameRepository) *GameService {
+func NewGameService(gameRepo domain.GameRepo) *GameService {
 	return &GameService{
-		gameRepository: gameRepository,
+		gameRepo: gameRepo,
 	}
 }
 
 func (s *GameService) CreateGame(ctx context.Context, in CreateGameInput) (CreateGameOutput, error) {
-	whitePlayer := domain.NewPlayer(in.WhitePlayer.ID, in.WhitePlayer.Name)
-	blackPlayer := domain.NewPlayer(in.BlackPlayer.ID, in.BlackPlayer.Name)
-	timeControl, err := domain.NewTimeControl(in.TimeControlID)
-	if err != nil {
-		return CreateGameOutput{}, err
-	}
+	whitePlayer := domain.NewPlayer(in.WhitePlayer.ID, in.WhitePlayer.Name, in.WhitePlayer.Rating)
+	blackPlayer := domain.NewPlayer(in.BlackPlayer.ID, in.BlackPlayer.Name, in.BlackPlayer.Rating)
+	timeControl := domain.NewTimeControl(in.TimeControlID)
+
 	game := domain.NewGame(whitePlayer, blackPlayer, timeControl)
-	err = s.gameRepository.Save(ctx, game)
+	err := s.gameRepo.Save(ctx, game)
 	if err != nil {
 		return CreateGameOutput{}, err
 	}

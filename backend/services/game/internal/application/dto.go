@@ -1,18 +1,21 @@
 package application
 
-import "github.com/google/uuid"
+import (
+	"game/internal/domain"
+)
 
 type PlayerDTO struct {
-	ID   uuid.UUID
-	Name string
+	ID     domain.PlayerID
+	Name   string
+	Rating domain.Rating
 }
 
 type CreateGameInput struct {
 	WhitePlayer   PlayerDTO
 	BlackPlayer   PlayerDTO
-	TimeControlID string
+	TimeControlID domain.TimeControlID
 }
 
 type CreateGameOutput struct {
-	GameID uuid.UUID
+	GameID domain.GameID
 }

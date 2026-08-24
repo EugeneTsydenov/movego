@@ -32,6 +32,26 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  matchmaking-service:
+    build:
+      context: .
+      dockerfile: ./services/matchmaking/Dockerfile
+    ports:
+      - "8070:8070"
+      - "2102:2102"
+    environment:
+      - MATCHMAKING_SERVICE_ENV=dev
+      - MATCHMAKING_SERVICE_REDIS_PASSWORD=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - app-network
 

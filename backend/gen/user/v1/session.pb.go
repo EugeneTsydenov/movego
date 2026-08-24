@@ -379,22 +379,22 @@ const file_user_v1_session_proto_rawDesc = "" +
 	"\n" +
 	"expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x1d\n" +
 	"\n" +
-	"is_current\x18\a \x01(\bR\tisCurrent\"R\n" +
-	"\x18GetActiveSessionsRequest\x126\n" +
-	"\x12current_session_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x10currentSessionId\"M\n" +
+	"is_current\x18\a \x01(\bR\tisCurrent\"U\n" +
+	"\x18GetActiveSessionsRequest\x129\n" +
+	"\x12current_session_id\x18\x01 \x01(\tB\v\xbaH\b\xc8\x01\x01r\x03\xb0\x01\x01R\x10currentSessionId\"M\n" +
 	"\x19GetActiveSessionsResponse\x120\n" +
-	"\bsessions\x18\x01 \x03(\v2\x14.user.v1.SessionInfoR\bsessions\"?\n" +
-	"\x14RevokeSessionRequest\x12'\n" +
+	"\bsessions\x18\x01 \x03(\v2\x14.user.v1.SessionInfoR\bsessions\"B\n" +
+	"\x14RevokeSessionRequest\x12*\n" +
 	"\n" +
-	"session_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tsessionId\"\x17\n" +
-	"\x15RevokeSessionResponse\"T\n" +
-	"\x1aRevokeOtherSessionsRequest\x126\n" +
-	"\x12current_session_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x10currentSessionId\"\x1d\n" +
+	"session_id\x18\x01 \x01(\tB\v\xbaH\b\xc8\x01\x01r\x03\xb0\x01\x01R\tsessionId\"\x17\n" +
+	"\x15RevokeSessionResponse\"W\n" +
+	"\x1aRevokeOtherSessionsRequest\x129\n" +
+	"\x12current_session_id\x18\x01 \x01(\tB\v\xbaH\b\xc8\x01\x01r\x03\xb0\x01\x01R\x10currentSessionId\"\x1d\n" +
 	"\x1bRevokeOtherSessionsResponse2\x9e\x02\n" +
 	"\x0eSessionService\x12Z\n" +
 	"\x11GetActiveSessions\x12!.user.v1.GetActiveSessionsRequest\x1a\".user.v1.GetActiveSessionsResponse\x12N\n" +
 	"\rRevokeSession\x12\x1d.user.v1.RevokeSessionRequest\x1a\x1e.user.v1.RevokeSessionResponse\x12`\n" +
-	"\x13RevokeOtherSessions\x12#.user.v1.RevokeOtherSessionsRequest\x1a$.user.v1.RevokeOtherSessionsResponseB\x1cZ\x1auser/gen/go/user/v1;userv1b\x06proto3"
+	"\x13RevokeOtherSessions\x12#.user.v1.RevokeOtherSessionsRequest\x1a$.user.v1.RevokeOtherSessionsResponseB\x14Z\x12gen/user/v1;userv1b\x06proto3"
 
 var (
 	file_user_v1_session_proto_rawDescOnce sync.Once

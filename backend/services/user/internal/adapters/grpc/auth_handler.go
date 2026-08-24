@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	userv1 "protogen/user/v1"
+	userv1 "gen/user/v1"
 	"user/internal/application"
 )
 
@@ -25,7 +25,11 @@ func NewAuthHandler(authService authService) *AuthHandler {
 }
 
 func (h *AuthHandler) SignUp(ctx context.Context, req *userv1.SignUpRequest) (*userv1.SignUpResponse, error) {
-	out, err := h.authService.SignUp(ctx, toSignUpInput(req))
+	in, err := toSignUpInput(req)
+	if err != nil {
+		return nil, err
+	}
+	out, err := h.authService.SignUp(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -33,11 +37,15 @@ func (h *AuthHandler) SignUp(ctx context.Context, req *userv1.SignUpRequest) (*u
 }
 
 func (h *AuthHandler) SignIn(ctx context.Context, req *userv1.SignInRequest) (*userv1.SignInResponse, error) {
-	out, err := h.authService.SignIn(ctx, toSignInInput(req))
+	in, err := toSignInInput(req)
 	if err != nil {
 		return nil, err
 	}
-	return toSignInResponse(out), err
+	out, err := h.authService.SignIn(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return toSignInResponse(out), nil
 }
 
 func (h *AuthHandler) Refresh(ctx context.Context, req *userv1.RefreshRequest) (*userv1.RefreshResponse, error) {
@@ -45,7 +53,7 @@ func (h *AuthHandler) Refresh(ctx context.Context, req *userv1.RefreshRequest) (
 	if err != nil {
 		return nil, err
 	}
-	return toRefreshResponse(out), err
+	return toRefreshResponse(out), nil
 }
 
 func (h *AuthHandler) SignOut(ctx context.Context, req *userv1.SignOutRequest) (*userv1.SignOutResponse, error) {

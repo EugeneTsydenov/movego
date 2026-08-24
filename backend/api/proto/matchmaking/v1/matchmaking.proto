@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package matchmaking.v1;
+
+option go_package = "gen/matchmaking/v1;matchmakingv1";
+
+import "buf/validate/validate.proto";
+
+service MatchmakingService {
+	rpc JoinQueue(JoinQueueRequest) returns (JoinQueueResponse);
+}
+
+message JoinQueueRequest {
+    string player_id = 1 [(buf.validate.field).required = true, (buf.validate.field).string.uuid = true];
+    string player_name = 2 [(buf.validate.field).required = true];
+    string time_control_id = 3 [
+        (buf.validate.field).required = true,
+        (buf.validate.field).string.pattern = "^\\d+\\+\\d+$"
+    ];
+    int32 player_rating = 4 [(buf.validate.field).required = true, (buf.validate.field).int32.gt = 0];
+}
+
+message JoinQueueResponse {}

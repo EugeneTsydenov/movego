@@ -2,22 +2,21 @@ package application
 
 import (
 	"time"
-
-	"github.com/google/uuid"
+	"user/internal/domain"
 )
 
 type UserDTO struct {
-	ID          uuid.UUID
-	Tag         string
-	Email       string
-	DisplayName string
-	Role        string
+	ID          domain.UserID
+	Tag         domain.Tag
+	Email       domain.Email
+	DisplayName domain.DisplayName
+	Role        domain.Role
 	UpdatedAt   time.Time
 	CreatedAt   time.Time
 }
 
 type SessionDTO struct {
-	ID           uuid.UUID
+	ID           domain.SessionID
 	UserAgent    string
 	ClientIP     string
 	IsCurrent    bool
@@ -27,8 +26,8 @@ type SessionDTO struct {
 }
 
 type SignUpInput struct {
-	Email     string
-	Password  string
+	Email     domain.Email
+	Password  domain.PlainPassword
 	UserAgent string
 	ClientIP  string
 }
@@ -40,8 +39,8 @@ type SignUpOutput struct {
 }
 
 type SignInInput struct {
-	Email     string
-	Password  string
+	Email     domain.Email
+	Password  domain.PlainPassword
 	UserAgent string
 	ClientIP  string
 }

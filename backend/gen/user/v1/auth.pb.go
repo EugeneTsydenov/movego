@@ -458,42 +458,42 @@ var File_user_v1_auth_proto protoreflect.FileDescriptor
 
 const file_user_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x12user/v1/auth.proto\x12\auser.v1\x1a\x12user/v1/user.proto\x1a\x1bbuf/validate/validate.proto\"\x94\x01\n" +
-	"\rSignUpRequest\x12 \n" +
-	"\x05email\x18\x01 \x01(\tB\n" +
-	"\xbaH\ar\x05\x18\xff\x01`\x01R\x05email\x12%\n" +
-	"\bpassword\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18HR\bpassword\x12\x1d\n" +
+	"\x12user/v1/auth.proto\x12\auser.v1\x1a\x12user/v1/user.proto\x1a\x1bbuf/validate/validate.proto\"\x9a\x01\n" +
+	"\rSignUpRequest\x12#\n" +
+	"\x05email\x18\x01 \x01(\tB\r\xbaH\n" +
+	"\xc8\x01\x01r\x05\x18\xff\x01`\x01R\x05email\x12(\n" +
+	"\bpassword\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x10\b\x18HR\bpassword\x12\x1d\n" +
 	"\n" +
 	"user_agent\x18\x03 \x01(\tR\tuserAgent\x12\x1b\n" +
 	"\tclient_ip\x18\x04 \x01(\tR\bclientIp\"{\n" +
 	"\x0eSignUpResponse\x12!\n" +
 	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\"\x94\x01\n" +
-	"\rSignInRequest\x12 \n" +
-	"\x05email\x18\x01 \x01(\tB\n" +
-	"\xbaH\ar\x05\x18\xff\x01`\x01R\x05email\x12%\n" +
-	"\bpassword\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18HR\bpassword\x12\x1d\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\"\x9a\x01\n" +
+	"\rSignInRequest\x12#\n" +
+	"\x05email\x18\x01 \x01(\tB\r\xbaH\n" +
+	"\xc8\x01\x01r\x05\x18\xff\x01`\x01R\x05email\x12(\n" +
+	"\bpassword\x18\x02 \x01(\tB\f\xbaH\t\xc8\x01\x01r\x04\x10\b\x18HR\bpassword\x12\x1d\n" +
 	"\n" +
 	"user_agent\x18\x03 \x01(\tR\tuserAgent\x12\x1b\n" +
 	"\tclient_ip\x18\x04 \x01(\tR\bclientIp\"{\n" +
 	"\x0eSignInResponse\x12!\n" +
 	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\"5\n" +
-	"\x0eRefreshRequest\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"Y\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\"=\n" +
+	"\x0eRefreshRequest\x12+\n" +
+	"\rrefresh_token\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\frefreshToken\"Y\n" +
 	"\x0fRefreshResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"5\n" +
-	"\x0eSignOutRequest\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"\x11\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"=\n" +
+	"\x0eSignOutRequest\x12+\n" +
+	"\rrefresh_token\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\frefreshToken\"\x11\n" +
 	"\x0fSignOutResponse2\xff\x01\n" +
 	"\vAuthService\x129\n" +
 	"\x06SignUp\x12\x16.user.v1.SignUpRequest\x1a\x17.user.v1.SignUpResponse\x129\n" +
 	"\x06SignIn\x12\x16.user.v1.SignInRequest\x1a\x17.user.v1.SignInResponse\x12<\n" +
 	"\aRefresh\x12\x17.user.v1.RefreshRequest\x1a\x18.user.v1.RefreshResponse\x12<\n" +
-	"\aSignOut\x12\x17.user.v1.SignOutRequest\x1a\x18.user.v1.SignOutResponseB\x1cZ\x1auser/gen/go/user/v1;userv1b\x06proto3"
+	"\aSignOut\x12\x17.user.v1.SignOutRequest\x1a\x18.user.v1.SignOutResponseB\x14Z\x12gen/user/v1;userv1b\x06proto3"
 
 var (
 	file_user_v1_auth_proto_rawDescOnce sync.Once

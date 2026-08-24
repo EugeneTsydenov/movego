@@ -12,12 +12,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type GameRepository struct {
+type GameRepo struct {
 	client *redis.Client
 }
 
-func NewGameRepository(client *redis.Client) *GameRepository {
-	return &GameRepository{
+func NewGameRepo(client *redis.Client) *GameRepo {
+	return &GameRepo{
 		client: client,
 	}
 }
@@ -26,13 +26,13 @@ func gameKey(id uuid.UUID) string {
 	return fmt.Sprintf("game:%s", id.String())
 }
 
-func (r *GameRepository) Save(ctx context.Context, game *domain.Game) error {
-	dto := toDomainDTO(game)
+func (r *GameRepo) Save(ctx context.Context, game *domain.Game) error {
+	dto := toGameDTO(game)
 	data, err := json.Marshal(dto)
 	if err != nil {
 		return err
 	}
-	key := gameKey(game.ID())
+	key := gameKey(game.ID().UUID())
 	err = r.client.Set(ctx, key, data, 24*time.Hour).Err()
 	if err != nil {
 		return err
@@ -40,8 +40,8 @@ func (r *GameRepository) Save(ctx context.Context, game *domain.Game) error {
 	return nil
 }
 
-func (r *GameRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Game, error) {
-	key := gameKey(id)
+func (r *GameRepo) GetByID(ctx context.Context, id domain.GameID) (*domain.Game, error) {
+	key := gameKey(id.UUID())
 
 	data, err := r.client.Get(ctx, key).Bytes()
 	if err != nil {
@@ -64,6 +64,6 @@ func (r *GameRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Gam
 	return game, nil
 }
 
-func (r *GameRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.client.Del(ctx, gameKey(id)).Err()
+func (r *GameRepo) Delete(ctx context.Context, id domain.GameID) error {
+	return r.client.Del(ctx, gameKey(id.UUID())).Err()
 }

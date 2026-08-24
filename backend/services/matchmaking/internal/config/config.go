@@ -12,16 +12,19 @@ type Config struct {
 		LogLevel        string        `mapstructure:"log_level"`
 	} `mapstructure:"app"`
 
-	Database struct {
-		Host     string `mapstructure:"host"`
-		Port     int    `mapstructure:"port"`
-		Name     string `mapstructure:"name"`
-		User     string `mapstructure:"user"`
-		Password string `mapstructure:"password"`
-		Driver   string `mapstructure:"driver"`
-		SSLMode  string `mapstructure:"ssl_mode"`
-		MaxConn  int    `mapstructure:"max_conn"`
-	} `mapstructure:"database"`
+	Redis struct {
+		Addr            string        `mapstructure:"addr"`
+		Username        string        `mapstructure:"username"`
+		Password        string        `mapstructure:"password"`
+		DB              int           `mapstructure:"db"`
+		PoolSize        int           `mapstructure:"pool_size"`
+		MinIdleConns    int           `mapstructure:"min_idle_conns"`
+		ConnMaxIdleTime time.Duration `mapstructure:"conn_max_idle_time"`
+		DialTimeout     time.Duration `mapstructure:"dial_timeout"`
+		ReadTimeout     time.Duration `mapstructure:"read_timeout"`
+		WriteTimeout    time.Duration `mapstructure:"write_timeout"`
+		MaxRetries      int           `mapstructure:"max_retries"`
+	} `mapstructure:"redis"`
 
 	Server struct {
 		Host            string        `mapstructure:"host" json:"host"`
@@ -32,6 +35,15 @@ type Config struct {
 		ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout"`
 	} `mapstructure:"server"`
 
+	GameClient struct {
+		Host        string        `mapstructure:"host" json:"host"`
+		Port        int           `mapstructure:"port" json:"port"`
+		DialTimeout time.Duration `mapstructure:"dial_timeout" json:"dial_timeout"`
+		ReadTimeout time.Duration `mapstructure:"read_timeout" json:"read_timeout"`
+		MaxRetries  int           `mapstructure:"max_retries" json:"max_retries"`
+		TlsEnabled  bool          `mapstructure:"tls_enabled" json:"tls_enabled"`
+	} `mapstructure:"game_client"`
+
 	Otel struct {
 		Endpoint    string `mapstructure:"endpoint"`
 		MetricsPort int    `mapstructure:"metrics_port"`
@@ -40,7 +52,7 @@ type Config struct {
 
 func Load(configDir, appEnv, prefix string) (*Config, error) {
 	var cfg Config
-	cfg.Database.Password = ""
+	cfg.Redis.Password = ""
 	if err := sharedconfig.Load(configDir, appEnv, prefix, &cfg); err != nil {
 		return nil, err
 	}

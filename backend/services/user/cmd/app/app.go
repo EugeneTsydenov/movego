@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 
-	userv1 "protogen/user/v1"
+	userv1 "gen/user/v1"
 	grpcadapter "user/internal/adapters/grpc"
 	"user/internal/adapters/jwt"
 	"user/internal/adapters/postgres"

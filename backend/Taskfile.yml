@@ -13,3 +13,5 @@ tasks:
     cmd: migrate -path services/user-service/db/migrations -database "postgres://postgres:postgres@localhost:5432/movego_user?sslmode=disable" up
   migrate-down:
     cmd: migrate -path services/user-service/db/migrations -database "postgres://postgres:postgres@localhost:5432/movego_user?sslmode=disable" down
+  run-infra:
+    cmd: docker compose up -d postgres redis tempo loki prometheus promtail grafana

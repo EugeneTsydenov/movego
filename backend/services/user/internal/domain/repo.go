@@ -2,8 +2,6 @@ package domain
 
 import (
 	"context"
-
-	"github.com/google/uuid"
 )
 
 type UserRepo interface {
@@ -17,11 +15,11 @@ type CredentialRepo interface {
 
 type SessionRepo interface {
 	Save(ctx context.Context, session *Session) error
-	FindValid(ctx context.Context, id uuid.UUID) (*Session, *User, error)
-	FindByID(ctx context.Context, id uuid.UUID) (*Session, error)
-	ListActiveByUserID(ctx context.Context, userID uuid.UUID) ([]*Session, error)
-	Delete(ctx context.Context, id uuid.UUID) error
-	DeleteAllExcept(ctx context.Context, userID, sessionID uuid.UUID) error
+	FindValid(ctx context.Context, id SessionID) (*Session, *User, error)
+	FindByID(ctx context.Context, id SessionID) (*Session, error)
+	ListActiveByUserID(ctx context.Context, userID UserID) ([]*Session, error)
+	Delete(ctx context.Context, id SessionID) error
+	DeleteAllExcept(ctx context.Context, userID UserID, sessionID SessionID) error
 }
 
 type Repos interface {

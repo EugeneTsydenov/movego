@@ -16,7 +16,7 @@ var chessPieces = []string{
 }
 
 type User struct {
-	id          uuid.UUID
+	id          UserID
 	email       Email
 	tag         Tag
 	displayName DisplayName
@@ -29,7 +29,7 @@ type User struct {
 func NewUser(email Email, tag Tag, displayName DisplayName, role Role) *User {
 	now := time.Now().UTC()
 	return &User{
-		id:          uuid.Must(uuid.NewV7()),
+		id:          UserID(uuid.Must(uuid.NewV7())),
 		email:       email,
 		tag:         tag,
 		displayName: displayName,
@@ -44,7 +44,7 @@ func NewTemporaryUser(email Email, role Role) *User {
 }
 
 func RestoreUser(
-	id uuid.UUID,
+	id UserID,
 	email Email,
 	tag Tag,
 	displayName DisplayName,
@@ -65,7 +65,7 @@ func RestoreUser(
 	}
 }
 
-func (u *User) ID() uuid.UUID {
+func (u *User) ID() UserID {
 	return u.id
 }
 

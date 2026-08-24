@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	GameService_CreateGame_FullMethodName = "/game.v1.GameService/CreateGame"
+	GameService_MakeMove_FullMethodName   = "/game.v1.GameService/MakeMove"
 )
 
 // GameServiceClient is the client API for GameService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GameServiceClient interface {
 	CreateGame(ctx context.Context, in *CreateGameRequest, opts ...grpc.CallOption) (*CreateGameResponse, error)
+	MakeMove(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[MakeMoveRequest, MakeMoveResponse], error)
 }
 
 type gameServiceClient struct {
@@ -47,11 +49,25 @@ func (c *gameServiceClient) CreateGame(ctx context.Context, in *CreateGameReques
 	return out, nil
 }
 
+func (c *gameServiceClient) MakeMove(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[MakeMoveRequest, MakeMoveResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &GameService_ServiceDesc.Streams[0], GameService_MakeMove_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[MakeMoveRequest, MakeMoveResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GameService_MakeMoveClient = grpc.BidiStreamingClient[MakeMoveRequest, MakeMoveResponse]
+
 // GameServiceServer is the server API for GameService service.
 // All implementations must embed UnimplementedGameServiceServer
 // for forward compatibility.
 type GameServiceServer interface {
 	CreateGame(context.Context, *CreateGameRequest) (*CreateGameResponse, error)
+	MakeMove(grpc.BidiStreamingServer[MakeMoveRequest, MakeMoveResponse]) error
 	mustEmbedUnimplementedGameServiceServer()
 }
 
@@ -64,6 +80,9 @@ type UnimplementedGameServiceServer struct{}
 
 func (UnimplementedGameServiceServer) CreateGame(context.Context, *CreateGameRequest) (*CreateGameResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateGame not implemented")
+}
+func (UnimplementedGameServiceServer) MakeMove(grpc.BidiStreamingServer[MakeMoveRequest, MakeMoveResponse]) error {
+	return status.Error(codes.Unimplemented, "method MakeMove not implemented")
 }
 func (UnimplementedGameServiceServer) mustEmbedUnimplementedGameServiceServer() {}
 func (UnimplementedGameServiceServer) testEmbeddedByValue()                     {}
@@ -104,6 +123,13 @@ func _GameService_CreateGame_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GameService_MakeMove_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GameServiceServer).MakeMove(&grpc.GenericServerStream[MakeMoveRequest, MakeMoveResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type GameService_MakeMoveServer = grpc.BidiStreamingServer[MakeMoveRequest, MakeMoveResponse]
+
 // GameService_ServiceDesc is the grpc.ServiceDesc for GameService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +142,13 @@ var GameService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GameService_CreateGame_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "MakeMove",
+			Handler:       _GameService_MakeMove_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "game/v1/game.proto",
 }

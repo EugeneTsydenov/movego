@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"shared/coreerrors"
 	"user/internal/adapters/postgres/sqlc"
 	"user/internal/domain"
 
@@ -34,7 +35,7 @@ func (r *CredentialRepo) FindForAuth(
 	row, err := r.querier.FindForAuth(ctx, toFindForAuthParams(email, provider))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil, domain.ErrNotFound
+			return nil, nil, coreerrors.ErrNotFound
 		}
 
 		return nil, nil, err

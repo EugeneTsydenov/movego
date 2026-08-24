@@ -1,25 +1,8 @@
 package domain
 
-import "time"
-
-type TimeControlID string
-
-const (
-	// Bullet
-	TimeControl1Min     TimeControlID = "1+0"
-	TimeControl2Min1Sec TimeControlID = "2+1"
-
-	// Blitz
-	TimeControl3Min     TimeControlID = "3+0"
-	TimeControl3Min2Sec TimeControlID = "3+2"
-	TimeControl5Min     TimeControlID = "5+0"
-
-	// Rapid
-	TimeControl10Min      TimeControlID = "10+0"
-	TimeControl15Min10Sec TimeControlID = "15+10"
-
-	// Classical
-	TimeControl30Min TimeControlID = "30+0"
+import (
+	"shared/timecontrol"
+	"time"
 )
 
 type TimeCategory string
@@ -40,68 +23,64 @@ type TimeControl struct {
 
 var presets = map[TimeControlID]TimeControl{
 	// Bullet
-	TimeControl1Min: {
-		id:        TimeControl1Min,
+	timecontrol.TIME_CONTROL_1_0: {
+		id:        timecontrol.TIME_CONTROL_1_0,
 		category:  CategoryBullet,
 		initial:   1 * time.Minute,
 		increment: 0,
 	},
-	TimeControl2Min1Sec: {
-		id:        TimeControl2Min1Sec,
+	timecontrol.TIME_CONTROL_2_1: {
+		id:        timecontrol.TIME_CONTROL_2_1,
 		category:  CategoryBullet,
 		initial:   2 * time.Minute,
 		increment: 1 * time.Second,
 	},
 
 	// Blitz
-	TimeControl3Min: {
-		id:        TimeControl3Min,
+	timecontrol.TIME_CONTROL_3_0: {
+		id:        timecontrol.TIME_CONTROL_3_0,
 		category:  CategoryBlitz,
 		initial:   3 * time.Minute,
 		increment: 0,
 	},
-	TimeControl3Min2Sec: {
-		id:        TimeControl3Min2Sec,
+	timecontrol.TIME_CONTROL_3_2: {
+		id:        timecontrol.TIME_CONTROL_3_2,
 		category:  CategoryBlitz,
 		initial:   3 * time.Minute,
 		increment: 2 * time.Second,
 	},
-	TimeControl5Min: {
-		id:        TimeControl5Min,
+	timecontrol.TIME_CONTROL_5_0: {
+		id:        timecontrol.TIME_CONTROL_5_0,
 		category:  CategoryBlitz,
 		initial:   5 * time.Minute,
 		increment: 0,
 	},
 
 	// Rapid
-	TimeControl10Min: {
-		id:        TimeControl10Min,
+	timecontrol.TIME_CONTROL_10_0: {
+		id:        timecontrol.TIME_CONTROL_10_0,
 		category:  CategoryRapid,
 		initial:   10 * time.Minute,
 		increment: 0,
 	},
-	TimeControl15Min10Sec: {
-		id:        TimeControl15Min10Sec,
+	timecontrol.TIME_CONTROL_15_10: {
+		id:        timecontrol.TIME_CONTROL_15_10,
 		category:  CategoryRapid,
 		initial:   15 * time.Minute,
 		increment: 10 * time.Second,
 	},
 
 	// Classical
-	TimeControl30Min: {
-		id:        TimeControl30Min,
+	timecontrol.TIME_CONTROL_30_0: {
+		id:        timecontrol.TIME_CONTROL_30_0,
 		category:  CategoryClassical,
 		initial:   30 * time.Minute,
 		increment: 0,
 	},
 }
 
-func NewTimeControl(id string) (TimeControl, error) {
-	preset, exists := presets[TimeControlID(id)]
-	if !exists {
-		return TimeControl{}, ErrInvalidTimeControl
-	}
-	return preset, nil
+func NewTimeControl(timeControlID TimeControlID) TimeControl {
+	return presets[timeControlID]
 }
 
 func (t TimeControl) ID() TimeControlID      { return t.id }

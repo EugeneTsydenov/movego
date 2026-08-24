@@ -7,8 +7,8 @@ import (
 )
 
 type Session struct {
-	id           uuid.UUID // token id
-	userID       uuid.UUID
+	id           SessionID // token id
+	userID       UserID
 	secretHash   string
 	userAgent    string
 	clientIP     string
@@ -17,10 +17,10 @@ type Session struct {
 	createdAt    time.Time
 }
 
-func NewSession(userID uuid.UUID, secretHash string, userAgent, clientIP string, duration time.Duration) *Session {
+func NewSession(userID UserID, secretHash string, userAgent, clientIP string, duration time.Duration) *Session {
 	now := time.Now().UTC()
 	return &Session{
-		id:           uuid.Must(uuid.NewV7()),
+		id:           SessionID(uuid.Must(uuid.NewV7())),
 		userID:       userID,
 		secretHash:   secretHash,
 		userAgent:    userAgent,
@@ -32,8 +32,8 @@ func NewSession(userID uuid.UUID, secretHash string, userAgent, clientIP string,
 }
 
 func RestoreSession(
-	id,
-	userID uuid.UUID,
+	id SessionID,
+	userID UserID,
 	secretHash,
 	userAgent,
 	clientIP string,
@@ -53,8 +53,8 @@ func RestoreSession(
 	}
 }
 
-func (s *Session) ID() uuid.UUID           { return s.id }
-func (s *Session) UserID() uuid.UUID       { return s.userID }
+func (s *Session) ID() SessionID           { return s.id }
+func (s *Session) UserID() UserID          { return s.userID }
 func (s *Session) SecretHash() string      { return s.secretHash }
 func (s *Session) UserAgent() string       { return s.userAgent }
 func (s *Session) ClientIP() string        { return s.clientIP }
@@ -62,6 +62,6 @@ func (s *Session) LastActiveAt() time.Time { return s.lastActiveAt }
 func (s *Session) ExpiresAt() time.Time    { return s.expiresAt }
 func (s *Session) CreatedAt() time.Time    { return s.createdAt }
 
-func (s *Session) CanBeRevoked(userID uuid.UUID) bool {
+func (s *Session) CanBeRevoked(userID UserID) bool {
 	return s.UserID() == userID
 }

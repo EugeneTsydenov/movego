@@ -3,14 +3,26 @@ app:
   shutdown_timeout: "15s"
   log_level: "warn"
 
-database:
-  host: "postgres"
-  port: 5432
-  name: "movego_matchmaking"
-  user: "postgres"
-  driver: "postgres"
-  ssl_mode: "require"
-  max_conn: 25
+redis:
+  addr: "redis:6379"
+  username: redis
+  db: 0
+  pool_size: 50
+  min_idle_conns: 10
+  conn_max_idle_time: "5m"
+  dial_timeout: "5s"
+  read_timeout: "3s"
+  write_timeout: "3s"
+  max_retries: 3
+
+
+game_client:
+  host: "game-service"
+  port: 8090
+  dial_timeout: "5s"
+  read_timeout: "3s"
+  max_retries: 3
+  tls_enabled: false
 
 server:
   host: "0.0.0.0"

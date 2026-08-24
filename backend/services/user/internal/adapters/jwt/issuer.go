@@ -80,12 +80,12 @@ func (i *Issuer) Verify(tokenStr string) (application.TokenClaims, error) {
 
 	subUUID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return application.TokenClaims{}, fmt.Errorf("invalid subject UUID: %w", err)
+		return application.TokenClaims{}, fmt.Errorf("invalid subject UUID: %v", err)
 	}
 
 	sessionUUID, err := uuid.Parse(claims.SessionID)
 	if err != nil {
-		return application.TokenClaims{}, fmt.Errorf("invalid session ID UUID: %w", err)
+		return application.TokenClaims{}, fmt.Errorf("invalid session ID UUID: %v", err)
 	}
 
 	return application.TokenClaims{

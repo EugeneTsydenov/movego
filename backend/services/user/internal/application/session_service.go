@@ -3,8 +3,6 @@ package application
 import (
 	"context"
 	"user/internal/domain"
-
-	"github.com/google/uuid"
 )
 
 type SessionService struct {
@@ -17,7 +15,7 @@ func NewSessionService(sessionRepo domain.SessionRepo) *SessionService {
 	}
 }
 
-func (s *SessionService) GetActiveSessions(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) ([]SessionDTO, error) {
+func (s *SessionService) GetActiveSessions(ctx context.Context, userID domain.UserID, sessionID domain.SessionID) ([]SessionDTO, error) {
 	sessions, err := s.sessionRepo.ListActiveByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -49,7 +47,7 @@ func (s *SessionService) GetActiveSessions(ctx context.Context, userID uuid.UUID
 	return dtos, nil
 }
 
-func (s *SessionService) RevokeSession(ctx context.Context, userID, sessionID uuid.UUID) error {
+func (s *SessionService) RevokeSession(ctx context.Context, userID domain.UserID, sessionID domain.SessionID) error {
 	session, err := s.sessionRepo.FindByID(ctx, sessionID)
 	if err != nil {
 		return err
@@ -67,6 +65,6 @@ func (s *SessionService) RevokeSession(ctx context.Context, userID, sessionID uu
 	return nil
 }
 
-func (s *SessionService) RevokeOtherSessions(ctx context.Context, userID, currSessionID uuid.UUID) error {
+func (s *SessionService) RevokeOtherSessions(ctx context.Context, userID domain.UserID, currSessionID domain.SessionID) error {
 	return s.sessionRepo.DeleteAllExcept(ctx, userID, currSessionID)
 }

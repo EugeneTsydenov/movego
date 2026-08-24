@@ -1,20 +1,29 @@
 package grpc
 
 import (
-	userv1 "protogen/user/v1"
+	userv1 "gen/user/v1"
 	"user/internal/application"
+	"user/internal/domain"
 
-	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func toSignUpInput(req *userv1.SignUpRequest) application.SignUpInput {
+func toSignUpInput(req *userv1.SignUpRequest) (application.SignUpInput, error) {
+	email, err := domain.NewEmail(req.Email)
+	if err != nil {
+		return application.SignUpInput{}, err
+	}
+	password, err := domain.NewPlainPassword(req.Password)
+	if err != nil {
+		return application.SignUpInput{}, err
+	}
+
 	return application.SignUpInput{
-		Email:     req.GetEmail(),
-		Password:  req.GetPassword(),
+		Email:     email,
+		Password:  password,
 		UserAgent: req.GetUserAgent(),
 		ClientIP:  req.GetClientIp(),
-	}
+	}, nil
 }
 
 func toSignUpResponse(out application.SignUpOutput) *userv1.SignUpResponse {
@@ -25,13 +34,22 @@ func toSignUpResponse(out application.SignUpOutput) *userv1.SignUpResponse {
 	}
 }
 
-func toSignInInput(req *userv1.SignInRequest) application.SignInInput {
+func toSignInInput(req *userv1.SignInRequest) (application.SignInInput, error) {
+	email, err := domain.NewEmail(req.Email)
+	if err != nil {
+		return application.SignInInput{}, err
+	}
+	password, err := domain.NewPlainPassword(req.Password)
+	if err != nil {
+		return application.SignInInput{}, err
+	}
+
 	return application.SignInInput{
-		Email:     req.GetEmail(),
-		Password:  req.GetPassword(),
+		Email:     email,
+		Password:  password,
 		UserAgent: req.GetUserAgent(),
 		ClientIP:  req.GetClientIp(),
-	}
+	}, nil
 }
 
 func toSignInResponse(out application.SignInOutput) *userv1.SignInResponse {
@@ -64,27 +82,50 @@ func toSignOutInput(req *userv1.SignOutRequest) application.SignOutInput {
 func toProtoUser(dto application.UserDTO) *userv1.User {
 	return &userv1.User{
 		Id:          dto.ID.String(),
-		Email:       dto.Email,
-		Tag:         dto.Tag,
-		DisplayName: dto.DisplayName,
-		Role:        dto.Role,
+		Email:       dto.Email.String(),
+		Tag:         dto.Tag.String(),
+		DisplayName: dto.DisplayName.String(),
+		Role:        dto.Role.String(),
 		CreatedAt:   timestamppb.New(dto.CreatedAt),
 		UpdatedAt:   timestamppb.New(dto.UpdatedAt),
 	}
 }
 
-func toUserDTO(user *userv1.User) application.UserDTO {
-	id, _ := uuid.Parse(user.GetId())
+func toUserDTO(user *userv1.User) (application.UserDTO, error) {
+	id, err := domain.NewUserID(user.Id)
+	if err != nil {
+		return application.UserDTO{}, err
+	}
+
+	tag, err := domain.NewTag(user.GetTag())
+	if err != nil {
+		return application.UserDTO{}, err
+	}
+
+	email, err := domain.NewEmail(user.GetEmail())
+	if err != nil {
+		return application.UserDTO{}, err
+	}
+
+	displayName, err := domain.NewDisplayName(user.GetDisplayName())
+	if err != nil {
+		return application.UserDTO{}, err
+	}
+
+	role, err := domain.NewRole(user.GetRole())
+	if err != nil {
+		return application.UserDTO{}, err
+	}
 
 	return application.UserDTO{
 		ID:          id,
-		Tag:         user.GetTag(),
-		Email:       user.GetEmail(),
-		DisplayName: user.GetDisplayName(),
-		Role:        user.GetRole(),
+		Tag:         tag,
+		Email:       email,
+		DisplayName: displayName,
+		Role:        role,
 		CreatedAt:   user.GetCreatedAt().AsTime(),
 		UpdatedAt:   user.GetUpdatedAt().AsTime(),
-	}
+	}, nil
 }
 
 func toProtoSession(session application.SessionDTO) *userv1.SessionInfo {

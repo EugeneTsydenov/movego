@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package user.v1;
 
-option go_package = "user/gen/go/user/v1;userv1";
+option go_package = "gen/user/v1;userv1";
 
 import "user/v1/user.proto";
 import "buf/validate/validate.proto";
@@ -17,11 +17,13 @@ service AuthService {
 message SignUpRequest {
     string email = 1 [
         (buf.validate.field).string.email = true,
-        (buf.validate.field).string.max_len = 255
+        (buf.validate.field).string.max_len = 255,
+        (buf.validate.field).required = true
     ];
     string password = 2 [
         (buf.validate.field).string.min_len = 8,
-        (buf.validate.field).string.max_len = 72
+        (buf.validate.field).string.max_len = 72,
+        (buf.validate.field).required = true
     ];
     string user_agent = 3;
     string client_ip = 4;
@@ -36,11 +38,13 @@ message SignUpResponse {
 message SignInRequest {
     string email = 1 [
         (buf.validate.field).string.email = true,
-        (buf.validate.field).string.max_len = 255
+        (buf.validate.field).string.max_len = 255,
+        (buf.validate.field).required = true
     ];
     string password = 2 [
         (buf.validate.field).string.min_len = 8,
-        (buf.validate.field).string.max_len = 72
+        (buf.validate.field).string.max_len = 72,
+        (buf.validate.field).required = true
     ];
     string user_agent = 3;
     string client_ip = 4;
@@ -53,7 +57,9 @@ message SignInResponse {
 }
 
 message RefreshRequest {
-    string refresh_token = 1;
+    string refresh_token = 1 [
+        (buf.validate.field).required = true
+    ];
 }
 
 message RefreshResponse {
@@ -62,7 +68,9 @@ message RefreshResponse {
 }
 
 message SignOutRequest {
-    string refresh_token = 1;
+    string refresh_token = 1 [
+        (buf.validate.field).required = true
+    ];
 }
 
 message SignOutResponse {}

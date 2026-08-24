@@ -51,8 +51,10 @@ func main() {
 		log.Fatalf("failed to init app: %v", err)
 	}
 
+	app.initModules()
+
 	go func() {
-		if err := app.Run(); err != nil {
+		if err := app.Run(ctx); err != nil {
 			app.Logger.Error("application runtime error", "error", err)
 			stop()
 		}

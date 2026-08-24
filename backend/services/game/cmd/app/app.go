@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	gamev1 "gen/game/v1"
 	"log/slog"
 	"net"
-	gamev1 "protogen/game/v1"
 
 	grpcadapter "game/internal/adapters/grpc"
 	redisadapter "game/internal/adapters/redis"
@@ -145,8 +145,8 @@ func initGRPCServer(appLogger *slog.Logger) *grpc.Server {
 }
 
 func initGameModule(cfg *config.Config, server *grpc.Server, redisClient *redis.Client, appLogger *slog.Logger) {
-	gameRepository := redisadapter.NewGameRepository(redisClient)
-	gameService := application.NewGameService(gameRepository)
+	gameRepo := redisadapter.NewGameRepo(redisClient)
+	gameService := application.NewGameService(gameRepo)
 	gamev1.RegisterGameServiceServer(server, grpcadapter.NewGameHandler(gameService))
 }
 

@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"errors"
-	"game/internal/domain"
+	"shared/coreerrors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,9 +41,9 @@ func mapDomainErrorToGRPC(err error) error {
 	// }
 
 	switch {
-	case errors.Is(err, domain.ErrGameNotFound):
+	case errors.Is(err, coreerrors.ErrNotFound):
 		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, domain.ErrValidation):
+	case errors.Is(err, coreerrors.ErrValidation):
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
 
