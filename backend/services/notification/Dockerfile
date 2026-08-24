@@ -26,7 +26,7 @@ RUN apk --no-cache add ca-certificates tzdata
 COPY --from=builder /app/bin/server /app/server
 COPY --from=builder /app/services/notification/configs /app/configs
 
-EXPOSE 8060
+EXPOSE 1000
 EXPOSE 2132
 
 CMD ["/app/server", "--config=configs"]

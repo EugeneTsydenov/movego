@@ -5,26 +5,20 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	notificationv1 "protogen/notification/v1"
-
-	grpcadapter "notification/internal/adapters/grpc"
-	"notification/internal/application"
+	"net/http"
+	"notification/internal/adapters/ws"
 	"notification/internal/config"
 
-	sharedinterceptor "shared/interceptor"
 	"shared/logger"
 	"shared/telemetry"
 
-	"buf.build/go/protovalidate"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 type app struct {
-	server       *grpc.Server
+	server       *http.Server
 	listner      net.Listener
 	shutdownOtel func(context.Context) error
 	Logger       *slog.Logger
@@ -43,16 +37,27 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 		return nil, err
 	}
 
-	server := initGRPCServer(appLogger)
+	wsManager := ws.NewManager()
+	wsHandler := ws.NewHandler(wsManager, appLogger)
 
-	//register dependencies
+	mux := http.NewServeMux()
 
-	reflection.Register(server)
+	wrappedHandler := otelhttp.NewHandler(mux, "ws-server")
+	mux.Handle("/ws", wsHandler)
 
-	appLogger.Info("gRPC services registered successfully")
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	httpServer := &http.Server{
+		Handler: wrappedHandler,
+	}
+
+	appLogger.Info("services registered successfully")
 
 	return &app{
-		server:       server,
+		server:       httpServer,
 		listner:      lis,
 		shutdownOtel: shutdownOtel,
 		Logger:       appLogger,
@@ -90,18 +95,6 @@ func initListener(port int, appLogger *slog.Logger) (net.Listener, error) {
 	return lis, nil
 }
 
-func initGRPCServer(appLogger *slog.Logger) *grpc.Server {
-	validator, _ := protovalidate.New()
-	return grpc.NewServer(
-		grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		grpc.ChainUnaryInterceptor(
-			sharedinterceptor.LoggingInterceptor(appLogger),
-			grpcadapter.ErrorInterceptor(),
-			sharedinterceptor.ValidationUnaryInterceptor(validator),
-		),
-	)
-}
-
 func (a *app) Run() error {
 	a.Logger.Info("starting gRPC service...", "addr", a.listner.Addr().String())
 	g := new(errgroup.Group)
@@ -120,7 +113,7 @@ func (a *app) Stop(ctx context.Context) {
 	stopped := make(chan struct{})
 	go func() {
 		a.Logger.Info("stopping public gRPC server...")
-		a.server.GracefulStop()
+		a.server.Shutdown(ctx)
 		close(stopped)
 	}()
 
@@ -129,7 +122,7 @@ func (a *app) Stop(ctx context.Context) {
 		a.Logger.Info("gRPC server stopped gracefully")
 	case <-ctx.Done():
 		a.Logger.Warn("wait timeout exceeded, forcing gRPC server stop")
-		a.server.Stop()
+		a.server.Close()
 	}
 
 	if a.shutdownOtel != nil {
