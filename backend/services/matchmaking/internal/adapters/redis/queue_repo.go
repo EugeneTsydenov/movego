@@ -55,6 +55,17 @@ func (r *QueueRepo) Save(ctx context.Context, player *domain.Player) error {
 	return nil
 }
 
+func (r *QueueRepo) Exists(ctx context.Context, playerID domain.PlayerID) (bool, error) {
+	pKey := playerKey(playerID.String())
+
+	val, err := r.client.Exists(ctx, pKey).Result()
+	if err != nil {
+		return false, fmt.Errorf("failed to check player existence in redis: %w", err)
+	}
+
+	return val > 0, nil
+}
+
 func (r *QueueRepo) FindAll(ctx context.Context) ([]*domain.Player, error) {
 	ids, err := r.client.ZRange(ctx, queueKey, 0, -1).Result()
 	if err != nil {
