@@ -51,9 +51,3 @@ func toCreateGameInput(req *gamev1.CreateGameRequest) (application.CreateGameInp
 		TimeControlID: timeControlID,
 	}, nil
 }
-
-func toCreateGameResponse(in application.CreateGameOutput) *gamev1.CreateGameResponse {
-	return &gamev1.CreateGameResponse{
-		GameId: in.GameID.String(),
-	}
-}

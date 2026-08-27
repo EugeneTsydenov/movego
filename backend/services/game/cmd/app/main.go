@@ -46,15 +46,23 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	log.Printf("initializing game service app in %s mode...", env)
 	app, err := newApp(ctx, cfg, env)
 	if err != nil {
 		log.Fatalf("failed to init app: %v", err)
 	}
+	log.Print("app initialized")
+
+	log.Print("initializing deps...")
+	if err := app.InitDeps(); err != nil {
+		log.Fatalf("failed to init deps: %v", err)
+	}
+	log.Print("deps initialized")
 
 	go func() {
+		log.Print("running app...")
 		if err := app.Run(); err != nil {
-			app.Logger.Error("application runtime error", "error", err)
-			stop()
+			log.Fatalf("application runtime error: %v", err)
 		}
 	}()
 
@@ -63,5 +71,7 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.App.ShutdownTimeout)
 	defer cancel()
 
-	app.Stop(shutdownCtx)
+	log.Print("game service shutting down...")
+	app.Shutdown(shutdownCtx)
+	log.Print("game service stopped")
 }

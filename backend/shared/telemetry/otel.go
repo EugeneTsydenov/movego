@@ -17,7 +17,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
-func InitTelemetry(ctx context.Context, serviceName, otelEndpoint string, metricsPort int) (func(context.Context) error, error) {
+func Init(ctx context.Context, serviceName, otelEndpoint string, metricsPort int) (func(context.Context) error, error) {
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String(serviceName),

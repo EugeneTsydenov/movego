@@ -26,9 +26,7 @@ message CreateGameRequest {
     ];
 }
 
-message CreateGameResponse {
-    string game_id = 1;
-}
+message CreateGameResponse {}
 
 message MakeMoveRequest {
     string game_id = 1 [(buf.validate.field).string.uuid = true];

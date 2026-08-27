@@ -24,6 +24,9 @@ server:
   idle_timeout: "120s"
   shutdown_timeout: "15s"
 
+nats:
+  url: "nats://nats:4222"
+
 otel:
   endpoint: "loki:4317"
   metrics_port: 2112

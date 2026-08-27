@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"game/internal/domain"
 	"log/slog"
-	"matchmaking/internal/domain"
 
 	"github.com/nats-io/nats.go/jetstream"
 )

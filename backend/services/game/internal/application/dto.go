@@ -15,7 +15,3 @@ type CreateGameInput struct {
 	BlackPlayer   PlayerDTO
 	TimeControlID domain.TimeControlID
 }
-
-type CreateGameOutput struct {
-	GameID domain.GameID
-}

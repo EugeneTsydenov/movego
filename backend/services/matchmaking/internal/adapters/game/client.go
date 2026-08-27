@@ -16,16 +16,10 @@ func NewClient(c gamev1.GameServiceClient) *Client {
 	}
 }
 
-func (c *Client) CreateGame(ctx context.Context, whitePlayer, blackPlayer *domain.Player, timeControlID domain.TimeControlID) (domain.GameID, error) {
-	res, err := c.client.CreateGame(ctx, toCreateGameRequest(whitePlayer, blackPlayer, timeControlID))
+func (c *Client) CreateGame(ctx context.Context, whitePlayer, blackPlayer *domain.Player, timeControlID domain.TimeControlID) error {
+	_, err := c.client.CreateGame(ctx, toCreateGameRequest(whitePlayer, blackPlayer, timeControlID))
 	if err != nil {
-		return domain.GameID{}, err
+		return err
 	}
-
-	gameID, err := domain.NewGameID(res.GameId)
-	if err != nil {
-		return domain.GameID{}, err
-	}
-
-	return gameID, nil
+	return nil
 }

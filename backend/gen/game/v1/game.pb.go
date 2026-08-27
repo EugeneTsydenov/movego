@@ -144,7 +144,6 @@ func (x *CreateGameRequest) GetTimeControlId() string {
 
 type CreateGameResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -177,13 +176,6 @@ func (x *CreateGameResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CreateGameResponse.ProtoReflect.Descriptor instead.
 func (*CreateGameResponse) Descriptor() ([]byte, []int) {
 	return file_game_v1_game_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *CreateGameResponse) GetGameId() string {
-	if x != nil {
-		return x.GameId
-	}
-	return ""
 }
 
 type MakeMoveRequest struct {
@@ -288,9 +280,8 @@ const file_game_v1_game_proto_rawDesc = "" +
 	"\fwhite_player\x18\x01 \x01(\v2\x0f.game.v1.PlayerR\vwhitePlayer\x122\n" +
 	"\fblack_player\x18\x02 \x01(\v2\x0f.game.v1.PlayerR\vblackPlayer\x12<\n" +
 	"\x0ftime_control_id\x18\x03 \x01(\tB\x14\xbaH\x11\xc8\x01\x01r\f2\n" +
-	"^\\d+\\+\\d+$R\rtimeControlId\"-\n" +
-	"\x12CreateGameResponse\x12\x17\n" +
-	"\agame_id\x18\x01 \x01(\tR\x06gameId\"H\n" +
+	"^\\d+\\+\\d+$R\rtimeControlId\"\x14\n" +
+	"\x12CreateGameResponse\"H\n" +
 	"\x0fMakeMoveRequest\x12!\n" +
 	"\agame_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x06gameId\x12\x12\n" +
 	"\x04move\x18\x02 \x01(\tR\x04move\"\x12\n" +

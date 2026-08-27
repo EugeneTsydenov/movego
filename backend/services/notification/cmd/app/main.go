@@ -46,12 +46,15 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	log.Printf("initializing notification service app in %s mode...", env)
 	app, err := newApp(ctx, cfg, env)
 	if err != nil {
 		log.Fatalf("failed to init app: %v", err)
 	}
+	log.Print("app initialized")
 
 	go func() {
+		log.Print("app running")
 		if err := app.Run(); err != nil {
 			app.Logger.Error("application runtime error", "error", err)
 			stop()
@@ -63,5 +66,7 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.App.ShutdownTimeout)
 	defer cancel()
 
-	app.Stop(shutdownCtx)
+	log.Print("notification service shutting down...")
+	app.Shutdown(shutdownCtx)
+	log.Print("notification service stopped")
 }

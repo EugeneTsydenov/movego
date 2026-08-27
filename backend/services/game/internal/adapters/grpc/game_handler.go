@@ -7,7 +7,7 @@ import (
 )
 
 type gameService interface {
-	CreateGame(ctx context.Context, in application.CreateGameInput) (application.CreateGameOutput, error)
+	CreateGame(ctx context.Context, in application.CreateGameInput) error
 }
 
 type GameHandler struct {
@@ -26,10 +26,9 @@ func (h *GameHandler) CreateGame(ctx context.Context, req *gamev1.CreateGameRequ
 	if err != nil {
 		return nil, err
 	}
-
-	out, err := h.gameService.CreateGame(ctx, in)
+	err = h.gameService.CreateGame(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return toCreateGameResponse(out), nil
+	return &gamev1.CreateGameResponse{}, nil
 }

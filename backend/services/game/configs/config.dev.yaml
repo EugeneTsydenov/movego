@@ -23,6 +23,9 @@ server:
   idle_timeout: "60s"
   shutdown_timeout: "2s"
 
+nats:
+  url: "nats://nats:4222"
+
 otel:
   endpoint: "tempo:4317"
   metrics_port: 2121

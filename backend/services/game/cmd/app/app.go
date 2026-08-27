@@ -3,95 +3,47 @@ package main
 import (
 	"context"
 	"fmt"
+	"game/internal/application"
+	"game/internal/config"
 	gamev1 "gen/game/v1"
 	"log/slog"
 	"net"
-
-	grpcadapter "game/internal/adapters/grpc"
-	redisadapter "game/internal/adapters/redis"
-	"game/internal/application"
-	"game/internal/config"
-
 	sharedinterceptor "shared/interceptor"
 	"shared/logger"
+	sharedredis "shared/redis"
 	"shared/telemetry"
 
+	grpcadapter "game/internal/adapters/grpc"
+	natsadapter "game/internal/adapters/nats"
+	redisadapter "game/internal/adapters/redis"
+
 	"buf.build/go/protovalidate"
-	"github.com/redis/go-redis/extra/redisotel/v9"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 type app struct {
-	server       *grpc.Server
-	listner      net.Listener
-	redisClient  *redis.Client
+	logger       *slog.Logger
 	shutdownOtel func(context.Context) error
-	Logger       *slog.Logger
+	redisClient  *redis.Client
+	natsConn     *nats.Conn
+	listener     net.Listener
+	grpcServer   *grpc.Server
 }
 
 func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
-	appLogger := initLogger(cfg, env)
-
-	shutdownOtel, err := initTelemetry(ctx, cfg, appLogger)
+	appLogger := logger.New(env, logger.FromStringLevel(env))
+	shutdownOtel, err := telemetry.Init(ctx, cfg.App.Name, cfg.Otel.Endpoint, cfg.Otel.MetricsPort)
 	if err != nil {
 		return nil, err
 	}
 
-	redisClient, err := initRedis(ctx, cfg, appLogger)
-	if err != nil {
-		return nil, err
-	}
-
-	lis, err := initListener(cfg.Server.Port, appLogger)
-	if err != nil {
-		return nil, err
-	}
-
-	server := initGRPCServer(appLogger)
-
-	initGameModule(cfg, server, redisClient, appLogger)
-
-	reflection.Register(server)
-
-	appLogger.Info("gRPC services registered successfully")
-
-	return &app{
-		server:       server,
-		listner:      lis,
-		redisClient:  redisClient,
-		shutdownOtel: shutdownOtel,
-		Logger:       appLogger,
-	}, nil
-}
-
-func initLogger(cfg *config.Config, env string) *slog.Logger {
-	appLogger := logger.New(env, logger.FromStringLevel(cfg.App.LogLevel))
-	appLogger.Info("initializing application", "app_name", cfg.App.Name, "env", env)
-	return appLogger
-}
-
-func initTelemetry(ctx context.Context, cfg *config.Config, appLogger *slog.Logger) (func(context.Context) error, error) {
-	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
-		appLogger.Error("opentelemetry internal error", "error", err)
-	}))
-
-	shutdownOtel, err := telemetry.InitTelemetry(ctx, cfg.App.Name, cfg.Otel.Endpoint, cfg.Otel.MetricsPort)
-	if err != nil {
-		appLogger.Error("failed to init telemetry", "error", err)
-		return nil, fmt.Errorf("failed to init telemetry: %w", err)
-	}
-
-	appLogger.Info("telemetry initialized", "endpoint", cfg.Otel.Endpoint, "metrics_port", cfg.Otel.MetricsPort)
-	return shutdownOtel, nil
-}
-
-func initRedis(ctx context.Context, cfg *config.Config, appLogger *slog.Logger) (*redis.Client, error) {
-	redisClient := redis.NewClient(&redis.Options{
+	redisClient, err := sharedredis.NewClient(ctx, &redis.Options{
 		Addr:            cfg.Redis.Addr,
 		Username:        cfg.Redis.Username,
 		Password:        cfg.Redis.Password,
@@ -104,37 +56,22 @@ func initRedis(ctx context.Context, cfg *config.Config, appLogger *slog.Logger) 
 		WriteTimeout:    cfg.Redis.WriteTimeout,
 		MaxRetries:      cfg.Redis.MaxRetries,
 	})
-
-	if err := redisotel.InstrumentTracing(redisClient); err != nil {
-		return nil, fmt.Errorf("failed to instrument redis tracing: %w", err)
-	}
-
-	if err := redisotel.InstrumentMetrics(redisClient); err != nil {
-		return nil, fmt.Errorf("failed to instrument redis metrics: %w", err)
-	}
-
-	if err := redisClient.Ping(ctx).Err(); err != nil {
-		appLogger.Error("failed to ping redis", "addr", cfg.Redis.Addr, "error", err)
-		return nil, fmt.Errorf("failed to ping redis: %w", err)
-	}
-
-	appLogger.Info("connected to redis successfully", "addr", cfg.Redis.Addr, "db", cfg.Redis.DB)
-	return redisClient, nil
-}
-
-func initListener(port int, appLogger *slog.Logger) (net.Listener, error) {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		appLogger.Error("failed to start listener", "port", port, "error", err)
-		return nil, fmt.Errorf("failed to listen port %d: %w", port, err)
+		return nil, err
 	}
-	appLogger.Info("net listener established", "addr", lis.Addr().String())
-	return lis, nil
-}
 
-func initGRPCServer(appLogger *slog.Logger) *grpc.Server {
+	nc, err := nats.Connect(cfg.Nats.URL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to nats: %w", err)
+	}
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Server.Port))
+	if err != nil {
+		return nil, fmt.Errorf("failed to listen: %w", err)
+	}
+
 	validator, _ := protovalidate.New()
-	return grpc.NewServer(
+	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
 			sharedinterceptor.LoggingInterceptor(appLogger),
@@ -142,59 +79,74 @@ func initGRPCServer(appLogger *slog.Logger) *grpc.Server {
 			sharedinterceptor.ValidationUnaryInterceptor(validator),
 		),
 	)
+	reflection.Register(grpcServer)
+
+	return &app{
+		logger:       appLogger,
+		shutdownOtel: shutdownOtel,
+		redisClient:  redisClient,
+		natsConn:     nc,
+		listener:     lis,
+		grpcServer:   grpcServer,
+	}, nil
 }
 
-func initGameModule(cfg *config.Config, server *grpc.Server, redisClient *redis.Client, appLogger *slog.Logger) {
-	gameRepo := redisadapter.NewGameRepo(redisClient)
-	gameService := application.NewGameService(gameRepo)
-	gamev1.RegisterGameServiceServer(server, grpcadapter.NewGameHandler(gameService))
+func (a *app) InitDeps() error {
+	gameRepo := redisadapter.NewGameRepo(a.redisClient)
+	js, err := jetstream.New(a.natsConn)
+	if err != nil {
+		return err
+	}
+	publisher := natsadapter.NewGamePublisher(js, a.logger)
+	gameService := application.NewGameService(gameRepo, publisher)
+	gameHandler := grpcadapter.NewGameHandler(gameService)
+	gamev1.RegisterGameServiceServer(a.grpcServer, gameHandler)
+	return nil
 }
 
 func (a *app) Run() error {
-	a.Logger.Info("starting gRPC service...", "addr", a.listner.Addr().String())
 	g := new(errgroup.Group)
 	g.Go(func() error {
-		if err := a.server.Serve(a.listner); err != nil {
-			return fmt.Errorf("gRPC server failed: %w", err)
-		}
-		return nil
+		return a.grpcServer.Serve(a.listener)
 	})
 	return g.Wait()
 }
 
-func (a *app) Stop(ctx context.Context) {
-	a.Logger.Info("graceful shutdown initiated for all components")
-
+func (a *app) Shutdown(ctx context.Context) {
 	stopped := make(chan struct{})
 	go func() {
-		a.Logger.Info("stopping public gRPC server...")
-		a.server.GracefulStop()
+		if a.grpcServer != nil {
+			a.grpcServer.GracefulStop()
+		}
 		close(stopped)
 	}()
 
 	select {
 	case <-stopped:
-		a.Logger.Info("gRPC server stopped gracefully")
+		a.logger.Info("gRPC server gracefully stopped")
 	case <-ctx.Done():
-		a.Logger.Warn("wait timeout exceeded, forcing gRPC server stop")
-		a.server.Stop()
-	}
-
-	a.Logger.Info("closing redis client...")
-	if err := a.redisClient.Close(); err != nil {
-		a.Logger.Error("failed to close redis client", "error", err)
-	} else {
-		a.Logger.Info("redis client closed")
-	}
-
-	if a.shutdownOtel != nil {
-		a.Logger.Info("shutting down telemetry...")
-		if err := a.shutdownOtel(ctx); err != nil {
-			a.Logger.Error("failed to shutdown telemetry gracefully", "error", err)
-		} else {
-			a.Logger.Info("telemetry shutdown successfully")
+		a.logger.Warn("shutdown timeout")
+		if a.grpcServer != nil {
+			a.grpcServer.Stop()
 		}
 	}
 
-	a.Logger.Info("application stopped completely")
+	if a.shutdownOtel != nil {
+		if err := a.shutdownOtel(ctx); err != nil {
+			a.logger.Error("failed to shutdown otel", "error", err)
+		}
+	}
+	if a.redisClient != nil {
+		if err := a.redisClient.Close(); err != nil {
+			a.logger.Error("failed to close redis client", "error", err)
+		}
+	}
+	if a.natsConn != nil {
+		a.natsConn.Close()
+	}
+	if a.listener != nil {
+		if err := a.listener.Close(); err != nil {
+			a.logger.Error("failed to close listener", "error", err)
+		}
+	}
 }

@@ -8,26 +8,20 @@ import (
 )
 
 type GameClient interface {
-	CreateGame(ctx context.Context, whitePlayer, blackPlayer *domain.Player, timeControlID domain.TimeControlID) (domain.GameID, error)
-}
-
-type Publisher interface {
-	PublishGameCreated(ctx context.Context, gameID domain.GameID, playersIDs []domain.PlayerID) error
+	CreateGame(ctx context.Context, whitePlayer, blackPlayer *domain.Player, timeControlID domain.TimeControlID) error
 }
 
 type MatchmakingWorker struct {
 	logger     *slog.Logger
 	queueRepo  domain.QueueRepo
 	gameClient GameClient
-	publisher  Publisher
 }
 
-func NewMatchmakingWorker(logger *slog.Logger, queueRepo domain.QueueRepo, gameClient GameClient, publisher Publisher) *MatchmakingWorker {
+func NewMatchmakingWorker(logger *slog.Logger, queueRepo domain.QueueRepo, gameClient GameClient) *MatchmakingWorker {
 	return &MatchmakingWorker{
 		logger:     logger,
 		queueRepo:  queueRepo,
 		gameClient: gameClient,
-		publisher:  publisher,
 	}
 }
 
@@ -61,24 +55,19 @@ func (w *MatchmakingWorker) proccessMatching(ctx context.Context) {
 
 				err := w.queueRepo.Delete(ctx, p1.ID(), p2.ID())
 				if err != nil {
-					w.logger.Warn("failed to delete players from queue (maybe already matched)", "err", err)
+					w.logger.Warn("failed to delete players from queue", "err", err)
 					continue
 				}
 
 				white, black := domain.AssignColors(p1, p2)
 
-				gameID, err := w.gameClient.CreateGame(ctx, white, black, white.TimeControlID())
+				err = w.gameClient.CreateGame(ctx, white, black, white.TimeControlID())
 				if err != nil {
-					w.logger.Error("failed to create game, players are lost from queue!", "err", err, "p1", p1.ID(), "p2", p2.ID())
+					w.logger.Error("failed to create game", "err", err, "p1", p1.ID(), "p2", p2.ID())
 					continue
 				}
 
-				w.logger.Info("game created successfully", "gameID", gameID)
-
-				if err = w.publisher.PublishGameCreated(ctx, gameID, []domain.PlayerID{p1.ID(), p2.ID()}); err != nil {
-					w.logger.Error("failed to publish game created event", "err", err)
-					continue
-				}
+				w.logger.Info("game created successfully")
 
 				return
 			}
