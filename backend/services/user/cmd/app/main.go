@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
+	"shared/logger"
 	"syscall"
 	"user/internal/config"
 )
@@ -39,24 +40,27 @@ func main() {
 	env := fetchAppEnv()
 	cfg, err := config.Load(configDir, env, envPrefix)
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		slog.Error("failed to load config", "error", err)
+		os.Exit(1)
 	}
+	appLogger := logger.New(env, logger.FromStringLevel(cfg.App.LogLevel))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	log.Printf("initializing user service app in %s mode...", env)
-	app, err := newApp(ctx, cfg, env)
+	appLogger.Info("initializing user service app", "env", env)
+	app, err := newApp(ctx, appLogger, cfg, env)
 	if err != nil {
-		log.Fatalf("failed to init app: %v", err)
+		appLogger.Error("failed to init app", "error", err)
+		os.Exit(1)
 	}
 
-	log.Print("app initialized")
+	appLogger.Info("app initialized")
 
 	go func() {
-		log.Print("app running")
+		appLogger.Info("app running")
 		if err := app.Run(); err != nil {
-			log.Fatalf("application runtime error: %v", err)
+			appLogger.Error("application runtime error", "error", err)
 		}
 	}()
 
@@ -65,7 +69,7 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.App.ShutdownTimeout)
 	defer cancel()
 
-	log.Print("user service shutting down...")
+	appLogger.Info("user service shutting down")
 	app.Shutdown(shutdownCtx)
-	log.Print("user service stopped")
+	appLogger.Info("user service stopped")
 }

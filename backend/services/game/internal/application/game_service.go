@@ -37,3 +37,16 @@ func (s *GameService) CreateGame(ctx context.Context, in CreateGameInput) error 
 	}
 	return nil
 }
+
+func (s *GameService) GetState(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID) (*domain.Game, error) {
+	game, err := s.gameRepo.GetByID(ctx, gameID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := game.EnsurePlayer(playerID); err != nil {
+		return nil, err
+	}
+
+	return game, nil
+}

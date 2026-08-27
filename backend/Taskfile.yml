@@ -9,9 +9,31 @@ tasks:
     cmds:
       - buf lint
       - buf push
+
   migrate-up:
     cmd: migrate -path services/user-service/db/migrations -database "postgres://postgres:postgres@localhost:5432/movego_user?sslmode=disable" up
   migrate-down:
     cmd: migrate -path services/user-service/db/migrations -database "postgres://postgres:postgres@localhost:5432/movego_user?sslmode=disable" down
-  run-infra:
-    cmd: docker compose up -d postgres redis tempo loki prometheus promtail grafana
+
+  run-user:
+    cmd: docker compose up --build user-service
+  stop-user:
+    cmd: docker compose down user-service
+  run-game:
+    cmd: docker compose up --build game-service
+  stop-game:
+    cmd: docker compose down game-service
+  run-matchmaking:
+    cmd: docker compose up --build matchmaking-service
+  stop-matchmaking:
+    cmd: docker compose down matchmaking-service
+  run-notification:
+    cmd: docker compose up --build notification-service
+  stop-notification:
+    cmd: docker compose down notification-service
+
+
+  up-infra:
+    cmd: docker compose up -d postgres redis tempo loki prometheus promtail grafana nats
+  down-infra:
+    cmd: docker compose down postgres redis tempo loki prometheus promtail grafana nats

@@ -8,7 +8,6 @@ import "buf/validate/validate.proto";
 
 service GameService {
     rpc CreateGame(CreateGameRequest) returns (CreateGameResponse);
-    rpc MakeMove(stream MakeMoveRequest) returns (stream MakeMoveResponse);
 }
 
 message Player {
@@ -27,12 +26,3 @@ message CreateGameRequest {
 }
 
 message CreateGameResponse {}
-
-message MakeMoveRequest {
-    string game_id = 1 [(buf.validate.field).string.uuid = true];
-    string move = 2;
-}
-
-message MakeMoveResponse {
-
-}

@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
+	"shared/logger"
 	"syscall"
 
 	"matchmaking/internal/config"
@@ -40,27 +41,30 @@ func main() {
 	env := fetchAppEnv()
 	cfg, err := config.Load(configDir, env, envPrefix)
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		slog.Error("failed to load config", "error", err)
+		os.Exit(1)
 	}
+	appLogger := logger.New(env, logger.FromStringLevel(cfg.App.LogLevel))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	log.Printf("initializing matchmaking service app in %s mode...", env)
-	app, err := newApp(ctx, cfg, env)
+	appLogger.Info("initializing matchmaking service app", "env", env)
+	app, err := newApp(ctx, appLogger, cfg, env)
 	if err != nil {
-		log.Fatalf("failed to init app: %v", err)
+		appLogger.Error("failed to init app", "error", err)
+		os.Exit(1)
 	}
-	log.Print("app initialized")
+	appLogger.Info("app initialized")
 
-	log.Print("initializing deps...")
+	appLogger.Info("initializing deps...")
 	app.InitDeps()
-	log.Print("deps initialized")
+	appLogger.Info("deps initialized")
 
 	go func() {
-		log.Print("running app..")
+		appLogger.Info("running app..")
 		if err := app.Run(ctx); err != nil {
-			log.Fatalf("application runtime error: %v", err)
+			appLogger.Error("application runtime error", "error", err)
 		}
 	}()
 
@@ -69,7 +73,7 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.App.ShutdownTimeout)
 	defer cancel()
 
-	log.Print("matchmaking service shutting down...")
+	appLogger.Info("matchmaking service shutting down...")
 	app.Shutdown(shutdownCtx)
-	log.Print("matchmaking service stopped")
+	appLogger.Info("matchmaking service stopped")
 }

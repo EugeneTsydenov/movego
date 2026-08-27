@@ -26,5 +26,5 @@ var (
 	ErrInvalidProvider     = coreerrors.New(coreerrors.ErrValidation, "invalid provider")
 
 	// Authentication
-	ErrInvalidCredentials = coreerrors.New(coreerrors.ErrAuth, "invalid credentials")
+	ErrInvalidCredentials = coreerrors.New(coreerrors.ErrAuthentication, "invalid credentials")
 )

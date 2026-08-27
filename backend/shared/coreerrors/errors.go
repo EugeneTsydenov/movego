@@ -3,10 +3,11 @@ package coreerrors
 import "errors"
 
 var (
-	ErrNotFound      = errors.New("not found")
-	ErrAlreadyExists = errors.New("already exists")
-	ErrValidation    = errors.New("validation failed")
-	ErrAuth          = errors.New("authentication failed")
+	ErrNotFound         = errors.New("not found")
+	ErrAlreadyExists    = errors.New("already exists")
+	ErrValidation       = errors.New("validation failed")
+	ErrAuthentication   = errors.New("authentication failed")
+	ErrPermissionDenied = errors.New("permission denied")
 )
 
 type DomainError struct {

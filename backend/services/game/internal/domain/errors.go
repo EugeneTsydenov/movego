@@ -11,4 +11,7 @@ var (
 
 	// NotFound
 	ErrGameNotFound = coreerrors.New(coreerrors.ErrNotFound, "game not found")
+
+	// PermissionDenied
+	ErrPlayerNotInGame = coreerrors.New(coreerrors.ErrPermissionDenied, "player not in game")
 )

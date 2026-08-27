@@ -36,6 +36,11 @@ type Config struct {
 		ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout" json:"shutdown_timeout"`
 	} `mapstructure:"server"`
 
+	WebSocketServer struct {
+		Host string `mapstructure:"host" json:"host"`
+		Port int    `mapstructure:"port" json:"port"`
+	} `mapstructure:"websocket_server"`
+
 	Nats struct {
 		URL string `mapstructure:"url"`
 	} `mapstructure:"nats"`

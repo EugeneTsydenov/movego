@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"shared/wsclient"
 
 	"github.com/coder/websocket"
 )
@@ -36,7 +37,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.manager.Register(context.Background(), userID, NewClient(conn))
+	h.manager.Register(context.Background(), userID, wsclient.New(conn))
 	defer h.manager.Unregister(userID)
 
 	for {
@@ -45,7 +46,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.logger.InfoContext(r.Context(), "failed to read from websocket", "user_id", userID, "err", err)
 			return
 		}
-
 	}
 
 }

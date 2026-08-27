@@ -11,7 +11,6 @@ import (
 	"notification/internal/adapters/ws"
 	"notification/internal/config"
 
-	"shared/logger"
 	"shared/otelnats"
 	"shared/telemetry"
 
@@ -30,9 +29,7 @@ type app struct {
 	natsSub      *natsadapter.GameJetStreamSub
 }
 
-func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
-	appLogger := logger.New(env, logger.FromStringLevel(cfg.App.LogLevel))
-
+func newApp(ctx context.Context, logger *slog.Logger, cfg *config.Config, env string) (*app, error) {
 	shutdownOtel, err := telemetry.Init(ctx, cfg.App.Name, cfg.Otel.Endpoint, cfg.Otel.MetricsPort)
 	if err != nil {
 		return nil, err
@@ -55,14 +52,14 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	}
 
 	wsManager := ws.NewManager()
-	wsHandler := ws.NewHandler(wsManager, appLogger)
+	wsHandler := ws.NewHandler(wsManager, logger)
 
-	gameHandler := natsadapter.NewGameHandler(wsManager, appLogger)
+	gameHandler := natsadapter.NewGameHandler(wsManager, logger)
 
 	natsSub := natsadapter.NewGameJetStreamSub(
 		js,
-		otelnats.TraceExtractMiddleware(cfg.App.Name, appLogger, gameHandler.Route),
-		appLogger,
+		otelnats.TraceExtractMiddleware(cfg.App.Name, logger, gameHandler.Route),
+		logger,
 	)
 
 	mux := http.NewServeMux()
@@ -82,7 +79,7 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 		server:       httpServer,
 		listner:      lis,
 		shutdownOtel: shutdownOtel,
-		Logger:       appLogger,
+		Logger:       logger,
 		natsConn:     nc,
 		natsSub:      natsSub,
 	}, nil

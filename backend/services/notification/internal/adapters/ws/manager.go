@@ -3,21 +3,22 @@ package ws
 import (
 	"context"
 	"fmt"
+	"shared/wsclient"
 	"sync"
 )
 
 type Manager struct {
 	mu      sync.RWMutex
-	clients map[string]*Client
+	clients map[string]*wsclient.Client
 }
 
 func NewManager() *Manager {
 	return &Manager{
-		clients: make(map[string]*Client),
+		clients: make(map[string]*wsclient.Client),
 	}
 }
 
-func (m *Manager) Register(ctx context.Context, userID string, client *Client) {
+func (m *Manager) Register(ctx context.Context, userID string, client *wsclient.Client) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

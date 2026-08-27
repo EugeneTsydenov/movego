@@ -16,6 +16,10 @@ const (
 	StatusAborted    GameStatus = "ABORTED"
 )
 
+func (s GameStatus) String() string {
+	return string(s)
+}
+
 type Game struct {
 	*chess.Game
 	id                 GameID
@@ -134,4 +138,11 @@ func (g *Game) FinishedAt() time.Time {
 
 func (g *Game) IsPlayer(playerID PlayerID) bool {
 	return g.whitePlayer.ID() == playerID || g.blackPlayer.ID() == playerID
+}
+
+func (g *Game) EnsurePlayer(id PlayerID) error {
+	if !g.IsPlayer(id) {
+		return ErrPlayerNotInGame
+	}
+	return nil
 }

@@ -16,7 +16,6 @@ import (
 
 	"shared/auth"
 	sharedinterceptor "shared/interceptor"
-	"shared/logger"
 	sharedredis "shared/redis"
 	"shared/telemetry"
 
@@ -40,9 +39,7 @@ type app struct {
 	server            *grpc.Server
 }
 
-func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
-	appLogger := logger.New(env, logger.FromStringLevel(cfg.App.LogLevel))
-
+func newApp(ctx context.Context, logger *slog.Logger, cfg *config.Config, env string) (*app, error) {
 	shutdownOtel, err := telemetry.Init(ctx, cfg.App.Name, cfg.Otel.Endpoint, cfg.Otel.MetricsPort)
 	if err != nil {
 		return nil, err
@@ -74,8 +71,8 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
-			sharedinterceptor.RecoveryInterceptor(appLogger),
-			sharedinterceptor.LoggingInterceptor(appLogger),
+			sharedinterceptor.RecoveryInterceptor(logger),
+			sharedinterceptor.LoggingInterceptor(logger),
 			grpcadapter.ErrorInterceptor(),
 			sharedinterceptor.ValidationUnaryInterceptor(validator),
 			auth.ContextInterceptor(),
@@ -95,7 +92,7 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 		redisClient:  redisClient,
 		gameConn:     gameConn,
 		shutdownOtel: shutdownOtel,
-		logger:       appLogger,
+		logger:       logger,
 	}, nil
 }
 

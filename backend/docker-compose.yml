@@ -24,6 +24,7 @@ services:
       dockerfile: ./services/game/Dockerfile
     ports:
       - "8090:8090"
+      - "1010:1010"
       - "2121:2121"
     environment:
       - GAME_SERVICE_ENV=dev

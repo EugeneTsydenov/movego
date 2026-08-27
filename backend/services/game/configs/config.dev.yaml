@@ -23,6 +23,10 @@ server:
   idle_timeout: "60s"
   shutdown_timeout: "2s"
 
+websocket_server:
+  host: "0.0.0.0"
+  port: 1010
+
 nats:
   url: "nats://nats:4222"
 

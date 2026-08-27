@@ -1,4 +1,4 @@
-package ws
+package wsclient
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type Client struct {
 	closeOnce sync.Once
 }
 
-func NewClient(conn *websocket.Conn) *Client {
+func New(conn *websocket.Conn) *Client {
 	return &Client{
 		conn: conn,
 		send: make(chan []byte, 256),

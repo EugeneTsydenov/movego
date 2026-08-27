@@ -27,6 +27,7 @@ COPY --from=builder /app/bin/server /app/server
 COPY --from=builder /app/services/game/configs /app/configs
 
 EXPOSE 8090
+EXPOSE 1010
 EXPOSE 2121
 
 CMD ["/app/server", "--config=configs"]
