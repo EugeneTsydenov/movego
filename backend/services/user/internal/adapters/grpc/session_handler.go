@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	userv1 "gen/user/v1"
+	"shared/auth"
 	"user/internal/application"
 	"user/internal/domain"
 )
@@ -25,7 +26,7 @@ func NewSessionHandler(sessionService sessionService) *SessionHandler {
 }
 
 func (h *SessionHandler) GetActiveSessions(ctx context.Context, req *userv1.GetActiveSessionsRequest) (*userv1.GetActiveSessionsResponse, error) {
-	userID, err := domain.NewUserID(userIDFromContext(ctx).String())
+	userID, err := domain.NewUserID(auth.UserIDFromContext(ctx).String())
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +44,7 @@ func (h *SessionHandler) GetActiveSessions(ctx context.Context, req *userv1.GetA
 }
 
 func (h *SessionHandler) RevokeSession(ctx context.Context, req *userv1.RevokeSessionRequest) (*userv1.RevokeSessionResponse, error) {
-	userID, err := domain.NewUserID(userIDFromContext(ctx).String())
+	userID, err := domain.NewUserID(auth.UserIDFromContext(ctx).String())
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +60,7 @@ func (h *SessionHandler) RevokeSession(ctx context.Context, req *userv1.RevokeSe
 }
 
 func (h *SessionHandler) RevokeOtherSessions(ctx context.Context, req *userv1.RevokeOtherSessionsRequest) (*userv1.RevokeOtherSessionsResponse, error) {
-	userID, err := domain.NewUserID(userIDFromContext(ctx).String())
+	userID, err := domain.NewUserID(auth.UserIDFromContext(ctx).String())
 	if err != nil {
 		return nil, err
 	}

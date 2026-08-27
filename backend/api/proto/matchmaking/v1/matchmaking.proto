@@ -11,13 +11,12 @@ service MatchmakingService {
 }
 
 message JoinQueueRequest {
-    string player_id = 1 [(buf.validate.field).required = true, (buf.validate.field).string.uuid = true];
-    string player_name = 2 [(buf.validate.field).required = true];
-    string time_control_id = 3 [
+    string player_name = 1 [(buf.validate.field).required = true];
+    string time_control_id = 2 [
         (buf.validate.field).required = true,
         (buf.validate.field).string.pattern = "^\\d+\\+\\d+$"
     ];
-    int32 player_rating = 4 [(buf.validate.field).required = true, (buf.validate.field).int32.gt = 0];
+    int32 player_rating = 3 [(buf.validate.field).required = true, (buf.validate.field).int32.gt = 0];
 }
 
 message JoinQueueResponse {}

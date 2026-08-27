@@ -1,4 +1,4 @@
-package grpc
+package auth
 
 import (
 	"context"
@@ -16,7 +16,7 @@ func ContextWithUserID(ctx context.Context, userID uuid.UUID) context.Context {
 	return context.WithValue(ctx, userIDKey, userID)
 }
 
-func userIDFromContext(ctx context.Context) uuid.UUID {
+func UserIDFromContext(ctx context.Context) uuid.UUID {
 	val := ctx.Value(userIDKey)
 	userID, _ := val.(uuid.UUID)
 	return userID

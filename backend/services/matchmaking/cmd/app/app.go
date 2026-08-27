@@ -14,6 +14,7 @@ import (
 	"matchmaking/internal/application"
 	"matchmaking/internal/config"
 
+	"shared/auth"
 	sharedinterceptor "shared/interceptor"
 	"shared/logger"
 	sharedredis "shared/redis"
@@ -73,9 +74,11 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			sharedinterceptor.RecoveryInterceptor(appLogger),
 			sharedinterceptor.LoggingInterceptor(appLogger),
 			grpcadapter.ErrorInterceptor(),
 			sharedinterceptor.ValidationUnaryInterceptor(validator),
+			auth.ContextInterceptor(),
 		),
 	)
 

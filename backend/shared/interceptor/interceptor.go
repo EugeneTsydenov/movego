@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"runtime/debug"
 
 	"buf.build/go/protovalidate"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -12,6 +13,26 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
+
+func RecoveryInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				stackTrace := string(debug.Stack())
+
+				log.ErrorContext(ctx, "recovered from panic in gRPC handler",
+					slog.String("method", info.FullMethod),
+					slog.Any("panic", r),
+					slog.String("stack", stackTrace),
+				)
+
+				err = status.Errorf(codes.Internal, "internal server error")
+			}
+		}()
+
+		return handler(ctx, req)
+	}
+}
 
 func LoggingInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {

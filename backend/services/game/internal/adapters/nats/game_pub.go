@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"game/internal/domain"
 	"log/slog"
+	"shared/otelnats"
 
-	"github.com/nats-io/nats.go/jetstream"
+	"github.com/nats-io/nats.go"
 )
 
 type GameCreatedEvent struct {
@@ -16,14 +17,14 @@ type GameCreatedEvent struct {
 }
 
 type GamePublisher struct {
-	js     jetstream.JetStream
-	logger *slog.Logger
+	publishFunc otelnats.PublishFunc
+	logger      *slog.Logger
 }
 
-func NewGamePublisher(js jetstream.JetStream, logger *slog.Logger) *GamePublisher {
+func NewGamePublisher(publishFunc otelnats.PublishFunc, logger *slog.Logger) *GamePublisher {
 	return &GamePublisher{
-		js:     js,
-		logger: logger,
+		publishFunc: publishFunc,
+		logger:      logger,
 	}
 }
 
@@ -42,7 +43,7 @@ func (p *GamePublisher) PublishGameCreated(ctx context.Context, gameID domain.Ga
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
 
-	_, err = p.js.Publish(ctx, "game.created", data)
+	_, err = p.publishFunc(ctx, &nats.Msg{Subject: "game.created", Data: data})
 	if err != nil {
 		return fmt.Errorf("failed to publish event: %w", err)
 	}

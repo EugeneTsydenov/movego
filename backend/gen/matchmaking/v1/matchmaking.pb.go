@@ -24,10 +24,9 @@ const (
 
 type JoinQueueRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlayerId      string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	PlayerName    string                 `protobuf:"bytes,2,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
-	TimeControlId string                 `protobuf:"bytes,3,opt,name=time_control_id,json=timeControlId,proto3" json:"time_control_id,omitempty"`
-	PlayerRating  int32                  `protobuf:"varint,4,opt,name=player_rating,json=playerRating,proto3" json:"player_rating,omitempty"`
+	PlayerName    string                 `protobuf:"bytes,1,opt,name=player_name,json=playerName,proto3" json:"player_name,omitempty"`
+	TimeControlId string                 `protobuf:"bytes,2,opt,name=time_control_id,json=timeControlId,proto3" json:"time_control_id,omitempty"`
+	PlayerRating  int32                  `protobuf:"varint,3,opt,name=player_rating,json=playerRating,proto3" json:"player_rating,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -60,13 +59,6 @@ func (x *JoinQueueRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use JoinQueueRequest.ProtoReflect.Descriptor instead.
 func (*JoinQueueRequest) Descriptor() ([]byte, []int) {
 	return file_matchmaking_v1_matchmaking_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *JoinQueueRequest) GetPlayerId() string {
-	if x != nil {
-		return x.PlayerId
-	}
-	return ""
 }
 
 func (x *JoinQueueRequest) GetPlayerName() string {
@@ -130,14 +122,13 @@ var File_matchmaking_v1_matchmaking_proto protoreflect.FileDescriptor
 
 const file_matchmaking_v1_matchmaking_proto_rawDesc = "" +
 	"\n" +
-	" matchmaking/v1/matchmaking.proto\x12\x0ematchmaking.v1\x1a\x1bbuf/validate/validate.proto\"\xd4\x01\n" +
-	"\x10JoinQueueRequest\x12(\n" +
-	"\tplayer_id\x18\x01 \x01(\tB\v\xbaH\b\xc8\x01\x01r\x03\xb0\x01\x01R\bplayerId\x12'\n" +
-	"\vplayer_name\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\n" +
+	" matchmaking/v1/matchmaking.proto\x12\x0ematchmaking.v1\x1a\x1bbuf/validate/validate.proto\"\xaa\x01\n" +
+	"\x10JoinQueueRequest\x12'\n" +
+	"\vplayer_name\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\n" +
 	"playerName\x12<\n" +
-	"\x0ftime_control_id\x18\x03 \x01(\tB\x14\xbaH\x11\xc8\x01\x01r\f2\n" +
+	"\x0ftime_control_id\x18\x02 \x01(\tB\x14\xbaH\x11\xc8\x01\x01r\f2\n" +
 	"^\\d+\\+\\d+$R\rtimeControlId\x12/\n" +
-	"\rplayer_rating\x18\x04 \x01(\x05B\n" +
+	"\rplayer_rating\x18\x03 \x01(\x05B\n" +
 	"\xbaH\a\xc8\x01\x01\x1a\x02 \x00R\fplayerRating\"\x13\n" +
 	"\x11JoinQueueResponse2f\n" +
 	"\x12MatchmakingService\x12P\n" +

@@ -4,10 +4,12 @@ import (
 	matchmakingv1 "gen/matchmaking/v1"
 	"matchmaking/internal/application"
 	"matchmaking/internal/domain"
+
+	"github.com/google/uuid"
 )
 
-func toJoinQueueInput(req *matchmakingv1.JoinQueueRequest) (application.JoinQueueInput, error) {
-	playerID, err := domain.NewPlayerID(req.PlayerId)
+func toJoinQueueInput(userID uuid.UUID, req *matchmakingv1.JoinQueueRequest) (application.JoinQueueInput, error) {
+	playerID, err := domain.NewPlayerID(userID.String())
 	if err != nil {
 		return application.JoinQueueInput{}, err
 	}

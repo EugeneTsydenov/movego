@@ -15,6 +15,7 @@ import (
 	"user/internal/application"
 	"user/internal/config"
 
+	"shared/auth"
 	sharedinterceptor "shared/interceptor"
 	"shared/logger"
 	"shared/telemetry"
@@ -67,6 +68,7 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	publicServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			sharedinterceptor.RecoveryInterceptor(appLogger),
 			sharedinterceptor.LoggingInterceptor(appLogger),
 			grpcadapter.ErrorInterceptor(),
 			sharedinterceptor.ValidationUnaryInterceptor(validator),
@@ -76,10 +78,11 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	privateServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			sharedinterceptor.RecoveryInterceptor(appLogger),
 			sharedinterceptor.LoggingInterceptor(appLogger),
 			grpcadapter.ErrorInterceptor(),
 			sharedinterceptor.ValidationUnaryInterceptor(validator),
-			grpcadapter.AuthContextInterceptor(),
+			auth.ContextInterceptor(),
 		),
 	)
 

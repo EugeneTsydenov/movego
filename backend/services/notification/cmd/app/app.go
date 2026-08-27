@@ -61,7 +61,7 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 
 	natsSub := natsadapter.NewGameJetStreamSub(
 		js,
-		otelnats.TraceMiddleware(cfg.App.Name, appLogger, gameHandler.Route),
+		otelnats.TraceExtractMiddleware(cfg.App.Name, appLogger, gameHandler.Route),
 		appLogger,
 	)
 

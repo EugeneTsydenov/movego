@@ -10,6 +10,7 @@ import (
 	"net"
 	sharedinterceptor "shared/interceptor"
 	"shared/logger"
+	"shared/otelnats"
 	sharedredis "shared/redis"
 	"shared/telemetry"
 
@@ -28,6 +29,7 @@ import (
 )
 
 type app struct {
+	cfg          *config.Config
 	logger       *slog.Logger
 	shutdownOtel func(context.Context) error
 	redisClient  *redis.Client
@@ -74,6 +76,7 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			sharedinterceptor.RecoveryInterceptor(appLogger),
 			sharedinterceptor.LoggingInterceptor(appLogger),
 			grpcadapter.ErrorInterceptor(),
 			sharedinterceptor.ValidationUnaryInterceptor(validator),
@@ -82,6 +85,7 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 	reflection.Register(grpcServer)
 
 	return &app{
+		cfg:          cfg,
 		logger:       appLogger,
 		shutdownOtel: shutdownOtel,
 		redisClient:  redisClient,
@@ -97,8 +101,12 @@ func (a *app) InitDeps() error {
 	if err != nil {
 		return err
 	}
-	publisher := natsadapter.NewGamePublisher(js, a.logger)
-	gameService := application.NewGameService(gameRepo, publisher)
+	basePublish := func(ctx context.Context, msg *nats.Msg, opts ...jetstream.PublishOpt) (*jetstream.PubAck, error) {
+		return js.PublishMsg(ctx, msg, opts...)
+	}
+	tracedPublish := otelnats.TraceInjectMiddleware(a.cfg.App.Name, basePublish)
+	gamePublisher := natsadapter.NewGamePublisher(tracedPublish, a.logger)
+	gameService := application.NewGameService(gameRepo, gamePublisher)
 	gameHandler := grpcadapter.NewGameHandler(gameService)
 	gamev1.RegisterGameServiceServer(a.grpcServer, gameHandler)
 	return nil
