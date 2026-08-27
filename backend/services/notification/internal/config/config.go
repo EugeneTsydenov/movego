@@ -17,6 +17,10 @@ type Config struct {
 		Port int    `mapstructure:"port" json:"port"`
 	} `mapstructure:"server"`
 
+	Nats struct {
+		URL string `mapstructure:"url"`
+	} `mapstructure:"nats"`
+
 	Otel struct {
 		Endpoint    string `mapstructure:"endpoint"`
 		MetricsPort int    `mapstructure:"metrics_port"`

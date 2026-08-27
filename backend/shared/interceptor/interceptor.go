@@ -20,8 +20,14 @@ func LoggingInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 			st, _ := status.FromError(err)
 
 			switch st.Code() {
-			case codes.InvalidArgument, codes.Unauthenticated, codes.NotFound, codes.AlreadyExists, codes.PermissionDenied:
+			case codes.InvalidArgument, codes.NotFound, codes.AlreadyExists, codes.PermissionDenied:
 				log.InfoContext(ctx, "grpc business error",
+					slog.String("method", info.FullMethod),
+					slog.String("code", st.Code().String()),
+					slog.String("error", err.Error()),
+				)
+			case codes.Unauthenticated:
+				log.WarnContext(ctx, "grpc unauthenticated",
 					slog.String("method", info.FullMethod),
 					slog.String("code", st.Code().String()),
 					slog.String("error", err.Error()),

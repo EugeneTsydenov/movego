@@ -10,6 +10,7 @@ import (
 
 	"matchmaking/internal/adapters/game"
 	grpcadapter "matchmaking/internal/adapters/grpc"
+	natsadapter "matchmaking/internal/adapters/nats"
 	redisadapter "matchmaking/internal/adapters/redis"
 	"matchmaking/internal/application"
 	"matchmaking/internal/config"
@@ -19,6 +20,8 @@ import (
 	"shared/telemetry"
 
 	"buf.build/go/protovalidate"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -35,6 +38,7 @@ type app struct {
 	listner           net.Listener
 	redisClient       *redis.Client
 	gameConn          *grpc.ClientConn
+	jetStream         jetstream.JetStream
 	shutdownOtel      func(context.Context) error
 	Logger            *slog.Logger
 	matchmakingWorker *application.MatchmakingWorker
@@ -65,6 +69,19 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 		return nil, err
 	}
 
+	nc, err := nats.Connect(cfg.Nats.URL)
+	if err != nil {
+		appLogger.Error("failed to connect to nats", "error", err)
+		return nil, fmt.Errorf("failed to connect to nats: %w", err)
+	}
+
+	js, err := jetstream.New(nc)
+	if err != nil {
+		nc.Close()
+		appLogger.Error("failed to init jetstream", "error", err)
+		return nil, fmt.Errorf("failed to init jetstream: %w", err)
+	}
+
 	reflection.Register(server)
 
 	appLogger.Info("gRPC infrastructure registered successfully")
@@ -74,6 +91,7 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 		listner:      lis,
 		redisClient:  redisClient,
 		gameConn:     gameConn,
+		jetStream:    js,
 		shutdownOtel: shutdownOtel,
 		Logger:       appLogger,
 	}, nil
@@ -83,8 +101,9 @@ func (a *app) initModules() {
 	queueRepo := redisadapter.NewQueueRepo(a.redisClient)
 	c := gamev1.NewGameServiceClient(a.gameConn)
 	gameClient := game.NewClient(c)
+	publisher := natsadapter.NewGamePublisher(a.jetStream, a.Logger)
 	matchmakingService := application.NewMatchmakingService(queueRepo)
-	a.matchmakingWorker = application.NewMatchmakingWorker(a.Logger, queueRepo, gameClient)
+	a.matchmakingWorker = application.NewMatchmakingWorker(a.Logger, queueRepo, gameClient, publisher)
 	matchmakingv1.RegisterMatchmakingServiceServer(a.server, grpcadapter.NewMatchmakingHandler(matchmakingService))
 }
 

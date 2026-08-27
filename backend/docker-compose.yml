@@ -55,6 +55,16 @@ services:
     networks:
       - app-network
 
+  notification-service:
+    build:
+      context: .
+      dockerfile: ./services/notification/Dockerfile
+    ports:
+      - "1000:1000"
+      - "2132:2132"
+    networks:
+      - app-network
+
   postgres:
     image: postgres:16-alpine
     container_name: movego_db_dev
@@ -93,6 +103,16 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+    networks:
+      - app-network
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: movego_nats_dev
+    command: ["-js", "-p", "4222", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
     networks:
       - app-network
 

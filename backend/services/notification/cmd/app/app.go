@@ -2,16 +2,22 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
+
+	natsadapter "notification/internal/adapters/nats"
 	"notification/internal/adapters/ws"
 	"notification/internal/config"
 
 	"shared/logger"
+	"shared/otelnats"
 	"shared/telemetry"
 
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/sync/errgroup"
@@ -22,6 +28,8 @@ type app struct {
 	listner      net.Listener
 	shutdownOtel func(context.Context) error
 	Logger       *slog.Logger
+	natsConn     *nats.Conn
+	natsSub      *natsadapter.GameJetStreamSub
 }
 
 func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
@@ -37,11 +45,31 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 		return nil, err
 	}
 
+	nc, err := nats.Connect(cfg.Nats.URL)
+	if err != nil {
+		appLogger.Error("failed to connect to nats", "error", err)
+		return nil, fmt.Errorf("failed to connect to nats: %w", err)
+	}
+
+	js, err := jetstream.New(nc)
+	if err != nil {
+		nc.Close()
+		appLogger.Error("failed to init jetstream", "error", err)
+		return nil, fmt.Errorf("failed to init jetstream: %w", err)
+	}
+
 	wsManager := ws.NewManager()
 	wsHandler := ws.NewHandler(wsManager, appLogger)
 
-	mux := http.NewServeMux()
+	gameHandler := natsadapter.NewGameHandler(wsManager, appLogger)
 
+	natsSub := natsadapter.NewGameJetStreamSub(
+		js,
+		otelnats.TraceMiddleware(cfg.App.Name, appLogger, gameHandler.Route),
+		appLogger,
+	)
+
+	mux := http.NewServeMux()
 	wrappedHandler := otelhttp.NewHandler(mux, "ws-server")
 	mux.Handle("/ws", wsHandler)
 
@@ -61,6 +89,8 @@ func newApp(ctx context.Context, cfg *config.Config, env string) (*app, error) {
 		listner:      lis,
 		shutdownOtel: shutdownOtel,
 		Logger:       appLogger,
+		natsConn:     nc,
+		natsSub:      natsSub,
 	}, nil
 }
 
@@ -96,38 +126,55 @@ func initListener(port int, appLogger *slog.Logger) (net.Listener, error) {
 }
 
 func (a *app) Run() error {
-	a.Logger.Info("starting gRPC service...", "addr", a.listner.Addr().String())
+	a.Logger.Info("starting application services...", "addr", a.listner.Addr().String())
 	g := new(errgroup.Group)
+
 	g.Go(func() error {
-		if err := a.server.Serve(a.listner); err != nil {
-			return fmt.Errorf("gRPC server failed: %w", err)
+		if err := a.server.Serve(a.listner); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("http server failed: %w", err)
 		}
 		return nil
 	})
+
+	g.Go(func() error {
+		if err := a.natsSub.Start(context.Background()); err != nil {
+			return fmt.Errorf("nats consumer failed: %w", err)
+		}
+		return nil
+	})
+
 	return g.Wait()
 }
 
 func (a *app) Stop(ctx context.Context) {
 	a.Logger.Info("graceful shutdown initiated for all components")
 
+	a.Logger.Info("stopping nats consumer...")
+	a.natsSub.Stop()
+
 	stopped := make(chan struct{})
 	go func() {
-		a.Logger.Info("stopping public gRPC server...")
+		a.Logger.Info("stopping http server...")
 		a.server.Shutdown(ctx)
 		close(stopped)
 	}()
 
 	select {
 	case <-stopped:
-		a.Logger.Info("gRPC server stopped gracefully")
+		a.Logger.Info("http server stopped gracefully")
 	case <-ctx.Done():
-		a.Logger.Warn("wait timeout exceeded, forcing gRPC server stop")
+		a.Logger.Warn("wait timeout exceeded, forcing http server stop")
 		a.server.Close()
+	}
+
+	if a.natsConn != nil {
+		a.Logger.Info("closing nats connection...")
+		a.natsConn.Close()
 	}
 
 	if a.shutdownOtel != nil {
 		a.Logger.Info("shutting down telemetry...")
-		if err := a.shutdownOtel(ctx); err != nil {
+		if err := a.shutdownOtel(context.Background()); err != nil {
 			a.Logger.Error("failed to shutdown telemetry gracefully", "error", err)
 		} else {
 			a.Logger.Info("telemetry shutdown successfully")

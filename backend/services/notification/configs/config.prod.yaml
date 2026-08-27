@@ -7,6 +7,9 @@ server:
   host: "0.0.0.0"
   port: 1000
 
+nats:
+  url: "nats://nats:4222"
+
 otel:
   endpoint: "tempo:4317"
   metrics_port: 2132

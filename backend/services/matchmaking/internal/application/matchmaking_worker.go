@@ -12,20 +12,22 @@ type GameClient interface {
 }
 
 type Publisher interface {
-	GameCreated(gameID domain.GameID)
+	PublishGameCreated(ctx context.Context, gameID domain.GameID, playersIDs []domain.PlayerID) error
 }
 
 type MatchmakingWorker struct {
 	logger     *slog.Logger
 	queueRepo  domain.QueueRepo
 	gameClient GameClient
+	publisher  Publisher
 }
 
-func NewMatchmakingWorker(logger *slog.Logger, queueRepo domain.QueueRepo, gameClient GameClient) *MatchmakingWorker {
+func NewMatchmakingWorker(logger *slog.Logger, queueRepo domain.QueueRepo, gameClient GameClient, publisher Publisher) *MatchmakingWorker {
 	return &MatchmakingWorker{
 		logger:     logger,
 		queueRepo:  queueRepo,
 		gameClient: gameClient,
+		publisher:  publisher,
 	}
 }
 
@@ -72,7 +74,11 @@ func (w *MatchmakingWorker) proccessMatching(ctx context.Context) {
 				}
 
 				w.logger.Info("game created successfully", "gameID", gameID)
-				// game.created event
+
+				if err = w.publisher.PublishGameCreated(ctx, gameID, []domain.PlayerID{p1.ID(), p2.ID()}); err != nil {
+					w.logger.Error("failed to publish game created event", "err", err)
+					continue
+				}
 
 				return
 			}

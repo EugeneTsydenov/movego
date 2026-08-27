@@ -32,6 +32,9 @@ game_client:
   max_retries: 3
   tls_enabled: false
 
+nats:
+  url: "nats://nats:4222"
+
 otel:
   endpoint: "tempo:4317"
   metrics_port: 2102
