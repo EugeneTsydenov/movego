@@ -50,3 +50,28 @@ func (s *GameService) GetState(ctx context.Context, gameID domain.GameID, player
 
 	return game, nil
 }
+
+func (s *GameService) MakeMove(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID, move domain.Move) (MakeMoveOutput, error) {
+	game, err := s.gameRepo.GetByID(ctx, gameID)
+	if err != nil {
+		return MakeMoveOutput{}, err
+	}
+
+	if err := game.EnsurePlayer(playerID); err != nil {
+		return MakeMoveOutput{}, err
+	}
+
+	if err := game.MakeMove(playerID, move); err != nil {
+		return MakeMoveOutput{}, err
+	}
+
+	return MakeMoveOutput{
+		Move:        move.String(),
+		Fen:         game.FEN(),
+		Turn:        game.Position().Turn().String(),
+		WhiteTimeMs: int(game.WhiteTimeRemaining().Milliseconds()),
+		BlackTimeMs: int(game.BlackTimeRemaining().Milliseconds()),
+		Status:      game.Status(),
+		Reason:      game.Method().String(),
+	}, nil
+}

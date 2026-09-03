@@ -8,6 +8,7 @@ var (
 	ErrValidation       = errors.New("validation failed")
 	ErrAuthentication   = errors.New("authentication failed")
 	ErrPermissionDenied = errors.New("permission denied")
+	ErrConflict         = errors.New("conflict")
 )
 
 type DomainError struct {

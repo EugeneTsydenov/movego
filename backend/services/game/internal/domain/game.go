@@ -28,6 +28,7 @@ type Game struct {
 	status             GameStatus
 	whiteTimeRemaining time.Duration
 	blackTimeRemaining time.Duration
+	turnStartedAt      time.Time
 	timeControl        TimeControl
 	createdAt          time.Time
 	updatedAt          time.Time
@@ -45,6 +46,7 @@ func NewGame(whitePlayer, blackPlayer *Player, timeControl TimeControl) *Game {
 		status:             StatusInProgress,
 		whiteTimeRemaining: initialTime,
 		blackTimeRemaining: initialTime,
+		turnStartedAt:      now,
 		timeControl:        timeControl,
 		createdAt:          now,
 		updatedAt:          now,
@@ -144,5 +146,31 @@ func (g *Game) EnsurePlayer(id PlayerID) error {
 	if !g.IsPlayer(id) {
 		return ErrPlayerNotInGame
 	}
+	return nil
+}
+
+func (g *Game) Start(now time.Time) error {
+	if g.status != StatusCreated {
+		return ErrGameAlreadyStarted
+	}
+	g.status = StatusInProgress
+	g.turnStartedAt = now
+	g.updatedAt = now
+	return nil
+}
+
+func (g *Game) IsClockRunning() bool {
+	return g.status == StatusInProgress && !g.turnStartedAt.IsZero()
+}
+
+func (g *Game) MakeMove(playerID PlayerID, move Move) error {
+	if err := g.EnsurePlayer(playerID); err != nil {
+		return err
+	}
+
+	if err := g.PushNotationMove(move.String(), chess.LongAlgebraicNotation{}, nil); err != nil {
+		return ErrIllegalMove
+	}
+
 	return nil
 }

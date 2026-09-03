@@ -66,3 +66,30 @@ func (m *GameManager) SendMessage(ctx context.Context, gameID, userID string, me
 
 	return client.Send(ctx, message)
 }
+
+func (m *GameManager) BroadcastMessage(ctx context.Context, gameID string, message []byte) error {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if gameClients, ok := m.clients[gameID]; ok {
+		for _, client := range gameClients {
+			if err := client.Send(ctx, message); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (m *GameManager) IsRegistered(gameID, userID string) bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if gameClients, ok := m.clients[gameID]; ok {
+		_, ok = gameClients[userID]
+		return ok
+	}
+
+	return false
+}

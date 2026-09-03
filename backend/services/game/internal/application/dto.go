@@ -15,3 +15,13 @@ type CreateGameInput struct {
 	BlackPlayer   PlayerDTO
 	TimeControlID domain.TimeControlID
 }
+
+type MakeMoveOutput struct {
+	Move        string
+	Fen         string
+	Turn        string
+	WhiteTimeMs int
+	BlackTimeMs int
+	Status      domain.GameStatus
+	Reason      string
+}

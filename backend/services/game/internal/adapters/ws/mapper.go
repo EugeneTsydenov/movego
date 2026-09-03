@@ -1,24 +1,9 @@
 package ws
 
-import "game/internal/domain"
-
-type PlayerDTO struct {
-	PlayerID string `json:"player_id"`
-	Name     string `json:"name"`
-	Rating   int    `json:"rating"`
-}
-
-type GameInitState struct {
-	Type        string    `json:"type"`
-	GameID      string    `json:"game_id"`
-	Status      string    `json:"status"`
-	WhitePlayer PlayerDTO `json:"white_player"`
-	BlackPlayer PlayerDTO `json:"black_player"`
-	FEN         string    `json:"fen"`
-	Turn        string    `json:"turn"`
-	WhiteTimeMs int       `json:"white_time_ms"`
-	BlackTimeMs int       `json:"black_time_ms"`
-}
+import (
+	"game/internal/application"
+	"game/internal/domain"
+)
 
 func toPlayerDTO(player *domain.Player) PlayerDTO {
 	return PlayerDTO{
@@ -28,8 +13,8 @@ func toPlayerDTO(player *domain.Player) PlayerDTO {
 	}
 }
 
-func toGameInitStateDTO(game *domain.Game) GameInitState {
-	return GameInitState{
+func toGameInitEvent(game *domain.Game) GameInitEvent {
+	return GameInitEvent{
 		Type:        "game_init",
 		GameID:      game.ID().String(),
 		Status:      game.Status().String(),
@@ -39,5 +24,19 @@ func toGameInitStateDTO(game *domain.Game) GameInitState {
 		Turn:        game.Position().Turn().String(),
 		WhiteTimeMs: int(game.WhiteTimeRemaining().Milliseconds()),
 		BlackTimeMs: int(game.WhiteTimeRemaining().Milliseconds()),
+	}
+}
+
+func toMoveMadeEvent(out application.MakeMoveOutput, gameID domain.GameID) MoveMadeEvent {
+	return MoveMadeEvent{
+		Type:        "move_made",
+		GameID:      gameID.String(),
+		Move:        out.Move,
+		Fen:         out.Fen,
+		Turn:        out.Turn,
+		WhiteTimeMs: out.WhiteTimeMs,
+		BlackTimeMs: out.BlackTimeMs,
+		Status:      out.Status.String(),
+		Reason:      out.Reason,
 	}
 }
