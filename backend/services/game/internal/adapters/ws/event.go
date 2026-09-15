@@ -54,6 +54,12 @@ type connectPayload struct {
 
 type connectEvent = serverEvent[connectPayload]
 
+type timeoutPaylod struct {
+	PlayerID string `json:"player_id"`
+}
+
+type timeoutEvent = serverEvent[timeoutPaylod]
+
 type startPayload struct{}
 
 type startEvent = serverEvent[startPayload]

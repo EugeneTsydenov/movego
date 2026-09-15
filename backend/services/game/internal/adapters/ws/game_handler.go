@@ -81,7 +81,7 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go client.WritePump(bgCtx)
 
 	onDisconn := h.makeOnDisconnect(gameID.String())
-	onTimeout := h.makeOnTimeout(gameID.String())
+	onTimeout := h.makeOnTimeout(gameID.String(), userID.String())
 
 	defer h.manager.DisconnectClient(gameID.String(), userID.String(), onDisconn, onTimeout)
 
@@ -94,7 +94,7 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		}
-		// 👈 ИСПРАВЛЕНИЕ: передаем независящий от HTTP-запроса контекст
+
 		return h.manager.BroadcastToClients(context.Background(), gameID.String(), msg)
 	}
 
@@ -107,7 +107,7 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return err
 		}
-		// 👈 ИСПРАВЛЕНИЕ: передаем независящий от HTTP-запроса контекст
+
 		return h.manager.BroadcastToClients(context.Background(), gameID.String(), msg)
 	}
 
@@ -118,7 +118,6 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Цикл чтения веб-сокета
 	for {
 		msgType, data, err := conn.Read(bgCtx)
 		if err != nil {
@@ -167,9 +166,14 @@ func (h *GameHandler) disconnectClient(
 	h.manager.DisconnectClient(gameID, userID, onDisconn, onTimeout)
 }
 
-func (h *GameHandler) makeOnTimeout(gameID string) func(ctx context.Context) error {
+func (h *GameHandler) makeOnTimeout(gameID string, clientID string) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
-		h.logger.Info("player timeout")
+		msg, err := json.Marshal(toTimeoutEvent(clientID))
+		if err != nil {
+			return nil
+		}
+
+		_ = h.manager.BroadcastToClients(context.Background(), gameID, msg)
 		return nil
 	}
 }

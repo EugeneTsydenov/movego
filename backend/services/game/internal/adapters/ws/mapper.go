@@ -14,6 +14,15 @@ func toDisconnectEvent(playerID string, timeoutExpiresAt time.Time) disconnectEv
 	}
 }
 
+func toTimeoutEvent(playerID string) timeoutEvent {
+	return timeoutEvent{
+		Type: "player_connection_timeout",
+		Payload: timeoutPaylod{
+			PlayerID: playerID,
+		},
+	}
+}
+
 func toConnectEvent(playerID string) connectEvent {
 	return connectEvent{
 		Type: "player_connected",
