@@ -78,10 +78,11 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	bgCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	go client.WritePump(bgCtx)
 
 	onDisconn := h.makeOnDisconnect(gameID.String())
 	onTimeout := h.makeOnTimeout(gameID.String())
-	// 👈 ИСПРАВЛЕНИЕ: правильный вызов метода менеджера при выходе из сокета
+
 	defer h.manager.DisconnectClient(gameID.String(), userID.String(), onDisconn, onTimeout)
 
 	if !h.manager.IsRoomCreated(gameID.String()) {
