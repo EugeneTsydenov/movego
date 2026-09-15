@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"game/internal/domain"
+	"time"
 )
 
 type Publisher interface {
@@ -22,16 +23,27 @@ func NewGameService(gameRepo domain.GameRepo, publisher Publisher) *GameService 
 }
 
 func (s *GameService) CreateGame(ctx context.Context, in CreateGameInput) error {
-	whitePlayer := domain.NewPlayer(in.WhitePlayer.ID, in.WhitePlayer.Name, in.WhitePlayer.Rating)
-	blackPlayer := domain.NewPlayer(in.BlackPlayer.ID, in.BlackPlayer.Name, in.BlackPlayer.Rating)
 	timeControl := domain.NewTimeControl(in.TimeControlID)
 
-	game := domain.NewGame(whitePlayer, blackPlayer, timeControl)
+	players := make([]*domain.Player, len(in.Players))
+	for i := 0; i < len(in.Players); i++ {
+		playerDTO := in.Players[i]
+		initialTime, _ := timeControl.Duration()
+		players[i] = domain.NewPlayer(playerDTO.ID, playerDTO.Name, playerDTO.Rating, playerDTO.Color, initialTime)
+	}
+
+	game := domain.NewGame(players, timeControl)
 	err := s.gameRepo.Save(ctx, game)
 	if err != nil {
 		return err
 	}
-	err = s.publisher.PublishGameCreated(ctx, game.ID(), []domain.PlayerID{whitePlayer.ID(), blackPlayer.ID()})
+
+	playerIDs := make([]domain.PlayerID, len(players))
+	for i := 0; i < len(players); i++ {
+		playerIDs[i] = players[i].ID()
+	}
+
+	err = s.publisher.PublishGameCreated(ctx, game.ID(), playerIDs)
 	if err != nil {
 		return err
 	}
@@ -44,11 +56,19 @@ func (s *GameService) GetState(ctx context.Context, gameID domain.GameID, player
 		return nil, err
 	}
 
-	if err := game.EnsurePlayer(playerID); err != nil {
-		return nil, err
+	return game, nil
+}
+
+func (s *GameService) StartGame(ctx context.Context, game *domain.Game, now time.Time) error {
+	if err := game.Start(now); err != nil {
+		return err
 	}
 
-	return game, nil
+	if err := s.gameRepo.Save(ctx, game); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *GameService) MakeMove(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID, move domain.Move) (MakeMoveOutput, error) {
@@ -65,13 +85,15 @@ func (s *GameService) MakeMove(ctx context.Context, gameID domain.GameID, player
 		return MakeMoveOutput{}, err
 	}
 
+	if err := s.gameRepo.Save(ctx, game); err != nil {
+		return MakeMoveOutput{}, err
+	}
+
 	return MakeMoveOutput{
-		Move:        move.String(),
-		Fen:         game.FEN(),
-		Turn:        game.Position().Turn().String(),
-		WhiteTimeMs: int(game.WhiteTimeRemaining().Milliseconds()),
-		BlackTimeMs: int(game.BlackTimeRemaining().Milliseconds()),
-		Status:      game.Status(),
-		Reason:      game.Method().String(),
+		Move:   move.String(),
+		Fen:    game.FEN(),
+		Turn:   game.Position().Turn().String(),
+		Status: game.Status(),
+		Reason: game.Method().String(),
 	}, nil
 }

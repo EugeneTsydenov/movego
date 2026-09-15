@@ -8,11 +8,11 @@ type PlayerDTO struct {
 	ID     domain.PlayerID
 	Name   string
 	Rating domain.Rating
+	Color  string
 }
 
 type CreateGameInput struct {
-	WhitePlayer   PlayerDTO
-	BlackPlayer   PlayerDTO
+	Players       []PlayerDTO
 	TimeControlID domain.TimeControlID
 }
 

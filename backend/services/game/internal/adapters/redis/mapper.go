@@ -6,23 +6,43 @@ import (
 	"time"
 )
 
+type playerDTO struct {
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	Rating        int    `json:"rating"`
+	Color         string `json:"color"`
+	TimeRemaining int64  `json:"time_remaining_ns"`
+}
+
 type gameDTO struct {
-	ID                 string   `json:"id"`
-	WhitePlayerID      string   `json:"white_player_id"`
-	WhitePlayerName    string   `json:"white_player_name"`
-	WhitePlayerRating  int      `json:"white_player_rating"`
-	BlackPlayerID      string   `json:"black_player_id"`
-	BlackPlayerName    string   `json:"black_player_name"`
-	BlackPlayerRating  int      `json:"black_player_rating"`
-	Status             string   `json:"status"`
-	WhiteTimeRemaining int64    `json:"white_time_remaining_ns"`
-	BlackTimeRemaining int64    `json:"black_time_remaining_ns"`
-	TimeControlID      string   `json:"time_control_id"`
-	FEN                string   `json:"fen"`
-	Moves              []string `json:"moves"`
-	CreatedAt          string   `json:"created_at"`
-	UpdatedAt          string   `json:"updated_at"`
-	FinishedAt         string   `json:"finished_at,omitempty"`
+	ID            string      `json:"id"`
+	Players       []playerDTO `json:"players"`
+	Status        string      `json:"status"`
+	TimeControlID string      `json:"time_control_id"`
+	FEN           string      `json:"fen"`
+	Moves         []string    `json:"moves"`
+	CreatedAt     string      `json:"created_at"`
+	UpdatedAt     string      `json:"updated_at"`
+	FinishedAt    string      `json:"finished_at,omitempty"`
+}
+
+func toPlayerDTO(player *domain.Player) playerDTO {
+	return playerDTO{
+		ID:            player.ID().String(),
+		Name:          player.Name(),
+		Rating:        player.Rating().Int(),
+		Color:         player.Color(),
+		TimeRemaining: player.TimeRemaining().Nanoseconds(),
+	}
+}
+
+func toPlayerDTOs(players []*domain.Player) []playerDTO {
+	dtos := make([]playerDTO, len(players))
+	for i := 0; i < len(players); i++ {
+		dtos[i] = toPlayerDTO(players[i])
+	}
+
+	return dtos
 }
 
 func toGameDTO(g *domain.Game) *gameDTO {
@@ -32,23 +52,37 @@ func toGameDTO(g *domain.Game) *gameDTO {
 	}
 
 	return &gameDTO{
-		ID:                 g.ID().String(),
-		WhitePlayerID:      g.WhitePlayer().ID().String(),
-		WhitePlayerName:    g.WhitePlayer().Name(),
-		WhitePlayerRating:  g.WhitePlayer().Rating().Int(),
-		BlackPlayerID:      g.BlackPlayer().ID().String(),
-		BlackPlayerName:    g.BlackPlayer().Name(),
-		BlackPlayerRating:  g.BlackPlayer().Rating().Int(),
-		Status:             string(g.Status()),
-		WhiteTimeRemaining: g.WhiteTimeRemaining().Nanoseconds(),
-		BlackTimeRemaining: g.BlackTimeRemaining().Nanoseconds(),
-		TimeControlID:      g.TimeControl().ID().String(),
-		FEN:                g.FEN(),
-		Moves:              moveStrs,
-		CreatedAt:          g.CreatedAt().Format(time.RFC3339),
-		UpdatedAt:          g.UpdatedAt().Format(time.RFC3339),
-		FinishedAt:         formatTime(g.FinishedAt()),
+		ID:            g.ID().String(),
+		Players:       toPlayerDTOs(g.Players()),
+		Status:        string(g.Status()),
+		TimeControlID: g.TimeControl().ID().String(),
+		FEN:           g.FEN(),
+		Moves:         moveStrs,
+		CreatedAt:     g.CreatedAt().Format(time.RFC3339),
+		UpdatedAt:     g.UpdatedAt().Format(time.RFC3339),
+		FinishedAt:    formatTime(g.FinishedAt()),
 	}
+}
+
+func toDomainPlayer(dto playerDTO) (*domain.Player, error) {
+	id, err := domain.NewPlayerID(dto.ID)
+	if err != nil {
+		return nil, err
+	}
+	return domain.NewPlayer(id, dto.Name, domain.Rating(dto.Rating), dto.Color, time.Duration(dto.TimeRemaining)), nil
+}
+
+func toDomainPlayers(dtos []playerDTO) ([]*domain.Player, error) {
+	players := make([]*domain.Player, len(dtos))
+	for i := 0; i < len(dtos); i++ {
+		player, err := toDomainPlayer(dtos[i])
+		if err != nil {
+			return nil, err
+		}
+		players[i] = player
+	}
+
+	return players, nil
 }
 
 func toDomainGame(dto gameDTO) (*domain.Game, error) {
@@ -57,29 +91,10 @@ func toDomainGame(dto gameDTO) (*domain.Game, error) {
 		return nil, fmt.Errorf("map game id: %v", err)
 	}
 
-	whiteID, err := domain.NewPlayerID(dto.WhitePlayerID)
+	players, err := toDomainPlayers(dto.Players)
 	if err != nil {
-		return nil, fmt.Errorf("map white id: %v", err)
+		return nil, fmt.Errorf("map players: %v", err)
 	}
-
-	whiteRating, err := domain.NewRating(dto.WhitePlayerRating)
-	if err != nil {
-		return nil, fmt.Errorf("map white rating: %v", err)
-	}
-
-	whitePlayer := domain.NewPlayer(whiteID, dto.WhitePlayerName, whiteRating)
-
-	blackID, err := domain.NewPlayerID(dto.BlackPlayerID)
-	if err != nil {
-		return nil, fmt.Errorf("map black id: %v", err)
-	}
-
-	blackRating, err := domain.NewRating(dto.BlackPlayerRating)
-	if err != nil {
-		return nil, fmt.Errorf("map black rating: %v", err)
-	}
-
-	blackPlayer := domain.NewPlayer(blackID, dto.BlackPlayerName, blackRating)
 
 	timeControlID, err := domain.NewTimeControlID(dto.TimeControlID)
 	if err != nil {
@@ -97,11 +112,8 @@ func toDomainGame(dto gameDTO) (*domain.Game, error) {
 
 	return domain.RestoreGame(
 		gameID,
-		whitePlayer,
-		blackPlayer,
+		players,
 		domain.GameStatus(dto.Status),
-		time.Duration(dto.WhiteTimeRemaining),
-		time.Duration(dto.BlackTimeRemaining),
 		timeControl,
 		dto.FEN,
 		dto.Moves,

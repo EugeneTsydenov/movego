@@ -3,6 +3,8 @@ package ws
 import (
 	"errors"
 	"game/internal/domain"
+	"net/http"
+	"shared/coreerrors"
 )
 
 const (
@@ -21,5 +23,21 @@ func toWsErrorCode(err error) string {
 		return invalidPromotion
 	default:
 		return "UNKNOWN_ERROR"
+	}
+}
+func toHTTPError(err error) (msg string, code int) {
+	switch {
+	case errors.Is(err, coreerrors.ErrNotFound):
+		msg = "not found"
+		code = http.StatusNotFound
+		return
+	case errors.Is(err, coreerrors.ErrPermissionDenied):
+		msg = "forbidden"
+		code = http.StatusForbidden
+		return
+	default:
+		msg = "internal server error"
+		code = http.StatusInternalServerError
+		return
 	}
 }

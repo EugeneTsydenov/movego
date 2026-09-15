@@ -10,13 +10,20 @@ func toProtoPlayer(player *domain.Player) *gamev1.Player {
 		Id:     player.ID().String(),
 		Name:   player.Name(),
 		Rating: int32(player.Rating()),
+		Color:  player.Color(),
 	}
 }
 
-func toCreateGameRequest(whitePlayer, blackPlayer *domain.Player, timeControlID domain.TimeControlID) *gamev1.CreateGameRequest {
+func toCreateGameRequest(players []*domain.Player, timeControlID domain.TimeControlID) *gamev1.CreateGameRequest {
+	if len(players) < 2 {
+		return nil
+	}
+
 	return &gamev1.CreateGameRequest{
-		WhitePlayer:   toProtoPlayer(whitePlayer),
-		BlackPlayer:   toProtoPlayer(blackPlayer),
+		Players: []*gamev1.Player{
+			toProtoPlayer(players[0]),
+			toProtoPlayer(players[1]),
+		},
 		TimeControlId: timeControlID.String(),
 	}
 }

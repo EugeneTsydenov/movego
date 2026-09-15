@@ -20,6 +20,7 @@ func toPlayerDTO(in *gamev1.Player) (application.PlayerDTO, error) {
 		ID:     id,
 		Name:   in.Name,
 		Rating: rating,
+		Color:  in.Color,
 	}, nil
 }
 
@@ -36,18 +37,17 @@ func toCreateGameInput(req *gamev1.CreateGameRequest) (application.CreateGameInp
 		return application.CreateGameInput{}, err
 	}
 
-	whitePlayer, err := toPlayerDTO(req.WhitePlayer)
-	if err != nil {
-		return application.CreateGameInput{}, err
-	}
-	blackPlayer, err := toPlayerDTO(req.BlackPlayer)
-	if err != nil {
-		return application.CreateGameInput{}, err
+	players := make([]application.PlayerDTO, len(req.Players))
+	for i := 0; i < len(req.Players); i++ {
+		player, err := toPlayerDTO(req.Players[i])
+		if err != nil {
+			return application.CreateGameInput{}, err
+		}
+		players[i] = player
 	}
 
 	return application.CreateGameInput{
-		WhitePlayer:   whitePlayer,
-		BlackPlayer:   blackPlayer,
+		Players:       players,
 		TimeControlID: timeControlID,
 	}, nil
 }

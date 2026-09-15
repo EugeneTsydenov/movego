@@ -17,6 +17,7 @@ import (
 
 type GameService interface {
 	GetState(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID) (*domain.Game, error)
+	StartGame(ctx context.Context, game *domain.Game, now time.Time) error
 	MakeMove(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID, move domain.Move) (application.MakeMoveOutput, error)
 }
 
@@ -57,15 +58,11 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	game, err := h.gameService.GetState(r.Context(), gameID, userID)
 	if err != nil {
-		switch {
-		case errors.Is(err, coreerrors.ErrNotFound):
-			http.Error(w, "game not found", http.StatusNotFound)
-		case errors.Is(err, coreerrors.ErrPermissionDenied):
-			http.Error(w, "forbidden", http.StatusForbidden)
-		default:
-			h.logger.WarnContext(r.Context(), "failed to get game state", "err", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+		msg, code := toHTTPError(err)
+		if code == http.StatusInternalServerError {
+			h.logger.WarnContext(r.Context(), "failed to get game state", "game_id", gameID, "user_id", userID)
 		}
+		http.Error(w, msg, code)
 		return
 	}
 
@@ -73,30 +70,54 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		OriginPatterns: []string{"*"},
 	})
 	if err != nil {
-		h.logger.InfoContext(r.Context(), "failed to accept websocket", "user_id", userID, "err", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		h.logger.WarnContext(r.Context(), "failed to accept websocket", "user_id", userID, "err", err)
 		return
 	}
 
 	client := wsclient.New(conn)
 
-	bgCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	bgCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	h.manager.Register(bgCtx, gameID.String(), userID.String(), client)
-	defer h.manager.Unregister(gameID.String(), userID.String())
+	onDisconn := h.makeOnDisconnect(gameID.String())
+	onTimeout := h.makeOnTimeout(gameID.String())
+	// 👈 ИСПРАВЛЕНИЕ: правильный вызов метода менеджера при выходе из сокета
+	defer h.manager.DisconnectClient(gameID.String(), userID.String(), onDisconn, onTimeout)
 
-	data, err := json.Marshal(toGameInitEvent(game))
+	if !h.manager.IsRoomCreated(gameID.String()) {
+		h.manager.CreateRoom(gameID.String(), game.PlayerIDStrings(), onDisconn, onTimeout)
+	}
+
+	onConn := func(ctx context.Context, clientID string) error {
+		msg, err := json.Marshal(toConnectEvent(clientID))
+		if err != nil {
+			return err
+		}
+		// 👈 ИСПРАВЛЕНИЕ: передаем независящий от HTTP-запроса контекст
+		return h.manager.BroadcastToClients(context.Background(), gameID.String(), msg)
+	}
+
+	onStart := func(ctx context.Context) error {
+		err := h.gameService.StartGame(ctx, game, time.Now())
+		if err != nil {
+			return err
+		}
+		msg, err := json.Marshal(toStartEvent())
+		if err != nil {
+			return err
+		}
+		// 👈 ИСПРАВЛЕНИЕ: передаем независящий от HTTP-запроса контекст
+		return h.manager.BroadcastToClients(context.Background(), gameID.String(), msg)
+	}
+
+	err = h.manager.OnPlayerConnect(bgCtx, gameID.String(), userID.String(), client, onConn, onStart)
 	if err != nil {
-		h.logger.InfoContext(bgCtx, "failed to marshal game init state", "user_id", userID, "game_id", gameID, "err", err)
+		h.logger.WarnContext(bgCtx, "failed to connect player", "user_id", userID, "game_id", gameID, "err", err)
+		_ = conn.Close(websocket.StatusInternalError, "failed to join room")
 		return
 	}
 
-	if err := client.Send(bgCtx, data); err != nil {
-		h.logger.InfoContext(bgCtx, "failed to send game init state", "user_id", userID, "game_id", gameID, "err", err)
-		return
-	}
-
+	// Цикл чтения веб-сокета
 	for {
 		msgType, data, err := conn.Read(bgCtx)
 		if err != nil {
@@ -112,10 +133,7 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.logger.WarnContext(bgCtx, "failed to handle client message", "user_id", userID, "game_id", gameID, "err", err)
 
 			if errors.Is(err, coreerrors.ErrPermissionDenied) {
-				err = conn.Close(websocket.StatusPolicyViolation, "forbidden")
-				if err != nil {
-					h.logger.WarnContext(bgCtx, "failed to close ws connection", "user_id", userID, "game_id", gameID, "err", err)
-				}
+				_ = conn.Close(websocket.StatusPolicyViolation, "forbidden")
 				return
 			}
 
@@ -128,45 +146,84 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *GameHandler) makeOnDisconnect(gameID string) func(ctx context.Context, client *client) error {
+	return func(ctx context.Context, client *client) error {
+		msg, err := json.Marshal(toDisconnectEvent(client.ClientID(), client.DisconnExpiresAt()))
+		if err != nil {
+			return err
+		}
+		_ = h.manager.BroadcastToClients(context.Background(), gameID, msg)
+		return nil
+	}
+}
+
+func (h *GameHandler) disconnectClient(
+	gameID,
+	userID string,
+	onDisconn func(ctx context.Context, client *client) error,
+	onTimeout func(ctx context.Context) error,
+) {
+	h.manager.DisconnectClient(gameID, userID, onDisconn, onTimeout)
+}
+
+func (h *GameHandler) makeOnTimeout(gameID string) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		h.logger.Info("player timeout")
+		return nil
+	}
+}
+
+// func (h *GameHandler) clientSessions(roomID string, players []*domain.Player) []*clientSession {
+// 	session := make([]*clientSession, len(players))
+// 	for i, p := range players {
+// 		if h.manager.IsConnected(roomID, p.ID().String()) {
+// 			session[i] = newClientSession(p, true, false, nil)
+// 			continue
+// 		}
+// 		expiresAt := time.Now().UTC().Add(1 * time.Minute)
+// 		session[i] = newClientSession(p, false, true, &expiresAt)
+// 	}
+// 	return session
+// }
+
 func (h *GameHandler) handleClientMessage(ctx context.Context, gameID domain.GameID, userID domain.PlayerID, data []byte) error {
-	var msg ClientEvent
+	var msg clientEvent
 	if err := json.Unmarshal(data, &msg); err != nil {
 		return err
 	}
 
 	switch msg.Type {
-	case "make_move":
-		return h.handleMakeMove(ctx, gameID, userID, msg.Payload)
+	// case "make_move":
+	// 	return h.handleMakeMove(ctx, gameID, userID, msg.Payload)
 	default:
 		return errors.New("unknown message type")
 	}
 }
 
-func (h *GameHandler) handleMakeMove(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID, data []byte) error {
-	var payload MovePayload
-	if err := json.Unmarshal(data, &payload); err != nil {
-		return err
-	}
+// func (h *GameHandler) handleMakeMove(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID, data []byte) error {
+// 	var payload MovePayload
+// 	if err := json.Unmarshal(data, &payload); err != nil {
+// 		return err
+// 	}
 
-	move, err := domain.NewMove(payload.From, payload.To, payload.Promotion)
-	if err != nil {
-		return err
-	}
+// 	move, err := domain.NewMove(payload.From, payload.To, payload.Promotion)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	out, err := h.gameService.MakeMove(ctx, gameID, playerID, move)
-	if err != nil {
-		return err
-	}
+// 	out, err := h.gameService.MakeMove(ctx, gameID, playerID, move)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	event := toMoveMadeEvent(out, gameID)
-	eventJSON, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
+// 	event := toMoveMadeEvent(out, gameID)
+// 	eventJSON, err := json.Marshal(event)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if err := h.manager.BroadcastMessage(ctx, gameID.String(), eventJSON); err != nil {
-		return err
-	}
-
-	return nil
-}
+// 	if err := h.manager.BroadcastMessage(ctx, gameID.String(), eventJSON); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

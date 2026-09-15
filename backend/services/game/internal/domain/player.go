@@ -1,16 +1,22 @@
 package domain
 
+import "time"
+
 type Player struct {
-	id     PlayerID
-	name   string
-	rating Rating
+	id            PlayerID
+	name          string
+	rating        Rating
+	color         string
+	timeRemaining time.Duration
 }
 
-func NewPlayer(id PlayerID, name string, rating Rating) *Player {
+func NewPlayer(id PlayerID, name string, rating Rating, color string, timeRemaining time.Duration) *Player {
 	return &Player{
-		id:     id,
-		name:   name,
-		rating: rating,
+		id:            id,
+		name:          name,
+		rating:        rating,
+		color:         color,
+		timeRemaining: timeRemaining,
 	}
 }
 
@@ -24,4 +30,12 @@ func (p *Player) Name() string {
 
 func (p *Player) Rating() Rating {
 	return p.rating
+}
+
+func (p *Player) Color() string {
+	return p.color
+}
+
+func (p *Player) TimeRemaining() time.Duration {
+	return p.timeRemaining
 }

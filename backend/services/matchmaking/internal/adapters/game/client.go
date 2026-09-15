@@ -16,8 +16,8 @@ func NewClient(c gamev1.GameServiceClient) *Client {
 	}
 }
 
-func (c *Client) CreateGame(ctx context.Context, whitePlayer, blackPlayer *domain.Player, timeControlID domain.TimeControlID) error {
-	_, err := c.client.CreateGame(ctx, toCreateGameRequest(whitePlayer, blackPlayer, timeControlID))
+func (c *Client) CreateGame(ctx context.Context, players []*domain.Player, timeControlID domain.TimeControlID) error {
+	_, err := c.client.CreateGame(ctx, toCreateGameRequest(players, timeControlID))
 	if err != nil {
 		return err
 	}

@@ -22,44 +22,34 @@ func (s GameStatus) String() string {
 
 type Game struct {
 	*chess.Game
-	id                 GameID
-	whitePlayer        *Player
-	blackPlayer        *Player
-	status             GameStatus
-	whiteTimeRemaining time.Duration
-	blackTimeRemaining time.Duration
-	turnStartedAt      time.Time
-	timeControl        TimeControl
-	createdAt          time.Time
-	updatedAt          time.Time
-	finishedAt         time.Time
+	id            GameID
+	players       []*Player
+	status        GameStatus
+	turnStartedAt time.Time
+	timeControl   TimeControl
+	createdAt     time.Time
+	updatedAt     time.Time
+	finishedAt    time.Time
 }
 
-func NewGame(whitePlayer, blackPlayer *Player, timeControl TimeControl) *Game {
+func NewGame(players []*Player, timeControl TimeControl) *Game {
 	now := time.Now().UTC()
-	initialTime, _ := timeControl.Duration()
 	return &Game{
-		id:                 GameID(uuid.Must(uuid.NewV7())),
-		Game:               chess.NewGame(),
-		whitePlayer:        whitePlayer,
-		blackPlayer:        blackPlayer,
-		status:             StatusInProgress,
-		whiteTimeRemaining: initialTime,
-		blackTimeRemaining: initialTime,
-		turnStartedAt:      now,
-		timeControl:        timeControl,
-		createdAt:          now,
-		updatedAt:          now,
+		id:            GameID(uuid.Must(uuid.NewV7())),
+		Game:          chess.NewGame(),
+		players:       players,
+		status:        StatusCreated,
+		turnStartedAt: now,
+		timeControl:   timeControl,
+		createdAt:     now,
+		updatedAt:     now,
 	}
 }
 
 func RestoreGame(
 	id GameID,
-	whitePlayer *Player,
-	blackPlayer *Player,
+	players []*Player,
 	status GameStatus,
-	whiteTimeRemaining time.Duration,
-	blackTimeRemaining time.Duration,
 	timeControl TimeControl,
 	fen string,
 	moves []string,
@@ -84,17 +74,14 @@ func RestoreGame(
 	}
 
 	return &Game{
-		Game:               chessGame,
-		id:                 id,
-		whitePlayer:        whitePlayer,
-		blackPlayer:        blackPlayer,
-		status:             status,
-		whiteTimeRemaining: whiteTimeRemaining,
-		blackTimeRemaining: blackTimeRemaining,
-		timeControl:        timeControl,
-		createdAt:          createdAt,
-		updatedAt:          updatedAt,
-		finishedAt:         finishedAt,
+		Game:        chessGame,
+		id:          id,
+		players:     players,
+		status:      status,
+		timeControl: timeControl,
+		createdAt:   createdAt,
+		updatedAt:   updatedAt,
+		finishedAt:  finishedAt,
 	}, nil
 }
 
@@ -102,24 +89,32 @@ func (g *Game) ID() GameID {
 	return g.id
 }
 
+func (g *Game) Players() []*Player {
+	return g.players
+}
+
 func (g *Game) WhitePlayer() *Player {
-	return g.whitePlayer
+	for _, p := range g.players {
+		if p.color == "w" {
+			return p
+		}
+	}
+
+	return nil
 }
 
 func (g *Game) BlackPlayer() *Player {
-	return g.blackPlayer
+	for _, p := range g.players {
+		if p.color == "b" {
+			return p
+		}
+	}
+
+	return nil
 }
 
 func (g *Game) Status() GameStatus {
 	return g.status
-}
-
-func (g *Game) WhiteTimeRemaining() time.Duration {
-	return g.whiteTimeRemaining
-}
-
-func (g *Game) BlackTimeRemaining() time.Duration {
-	return g.blackTimeRemaining
 }
 
 func (g *Game) TimeControl() TimeControl {
@@ -139,7 +134,13 @@ func (g *Game) FinishedAt() time.Time {
 }
 
 func (g *Game) IsPlayer(playerID PlayerID) bool {
-	return g.whitePlayer.ID() == playerID || g.blackPlayer.ID() == playerID
+	for _, r := range g.players {
+		if r.id == playerID {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (g *Game) EnsurePlayer(id PlayerID) error {
@@ -173,4 +174,35 @@ func (g *Game) MakeMove(playerID PlayerID, move Move) error {
 	}
 
 	return nil
+}
+
+func (g *Game) MoveLANHistoryStrings() []string {
+	moves := g.Moves()
+	history := make([]string, len(moves))
+
+	for i, move := range moves {
+		history[i] = move.String()
+	}
+
+	return history
+}
+
+func (g *Game) MoveSANHistoryStrings() []string {
+	moves := g.Moves()
+	positions := g.Positions()
+	encoder := chess.AlgebraicNotation{}
+
+	history := make([]string, len(moves))
+	for i, move := range moves {
+		history[i] = encoder.Encode(positions[i], move)
+	}
+
+	return history
+}
+func (g *Game) PlayerIDStrings() []string {
+	ids := make([]string, len(g.players))
+	for i, p := range g.players {
+		ids[i] = p.id.String()
+	}
+	return ids
 }

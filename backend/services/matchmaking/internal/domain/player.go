@@ -5,11 +5,15 @@ import (
 	"time"
 )
 
+const White = "w"
+const Black = "b"
+
 type Player struct {
 	id            PlayerID
 	name          string
 	timeControlID TimeControlID
 	rating        Rating
+	color         string
 	joinedAt      time.Time
 }
 
@@ -49,6 +53,10 @@ func (p *Player) Rating() Rating {
 	return p.rating
 }
 
+func (p *Player) Color() string {
+	return p.color
+}
+
 func (p *Player) JoinedAt() time.Time {
 	return p.joinedAt
 }
@@ -81,4 +89,8 @@ func (p *Player) CalculateRatingWindow() int {
 
 	expansion := int(seconds/5) * 50
 	return 50 + expansion
+}
+
+func (p *Player) SetColor(color string) {
+	p.color = color
 }

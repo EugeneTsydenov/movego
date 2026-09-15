@@ -8,7 +8,7 @@ import (
 )
 
 type GameClient interface {
-	CreateGame(ctx context.Context, whitePlayer, blackPlayer *domain.Player, timeControlID domain.TimeControlID) error
+	CreateGame(ctx context.Context, players []*domain.Player, timeControlID domain.TimeControlID) error
 }
 
 type MatchmakingWorker struct {
@@ -60,8 +60,10 @@ func (w *MatchmakingWorker) proccessMatching(ctx context.Context) {
 				}
 
 				white, black := domain.AssignColors(p1, p2)
+				white.SetColor(domain.White)
+				black.SetColor(domain.Black)
 
-				err = w.gameClient.CreateGame(ctx, white, black, white.TimeControlID())
+				err = w.gameClient.CreateGame(ctx, []*domain.Player{white, black}, white.TimeControlID())
 				if err != nil {
 					w.logger.Error("failed to create game", "err", err, "p1", p1.ID(), "p2", p2.ID())
 					continue

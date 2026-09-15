@@ -27,6 +27,7 @@ type Player struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Rating        int32                  `protobuf:"varint,3,opt,name=rating,proto3" json:"rating,omitempty"`
+	Color         string                 `protobuf:"bytes,4,opt,name=color,proto3" json:"color,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -82,11 +83,17 @@ func (x *Player) GetRating() int32 {
 	return 0
 }
 
+func (x *Player) GetColor() string {
+	if x != nil {
+		return x.Color
+	}
+	return ""
+}
+
 type CreateGameRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	WhitePlayer   *Player                `protobuf:"bytes,1,opt,name=white_player,json=whitePlayer,proto3" json:"white_player,omitempty"`
-	BlackPlayer   *Player                `protobuf:"bytes,2,opt,name=black_player,json=blackPlayer,proto3" json:"black_player,omitempty"`
-	TimeControlId string                 `protobuf:"bytes,3,opt,name=time_control_id,json=timeControlId,proto3" json:"time_control_id,omitempty"`
+	Players       []*Player              `protobuf:"bytes,1,rep,name=players,proto3" json:"players,omitempty"`
+	TimeControlId string                 `protobuf:"bytes,2,opt,name=time_control_id,json=timeControlId,proto3" json:"time_control_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -121,16 +128,9 @@ func (*CreateGameRequest) Descriptor() ([]byte, []int) {
 	return file_game_v1_game_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateGameRequest) GetWhitePlayer() *Player {
+func (x *CreateGameRequest) GetPlayers() []*Player {
 	if x != nil {
-		return x.WhitePlayer
-	}
-	return nil
-}
-
-func (x *CreateGameRequest) GetBlackPlayer() *Player {
-	if x != nil {
-		return x.BlackPlayer
+		return x.Players
 	}
 	return nil
 }
@@ -178,118 +178,25 @@ func (*CreateGameResponse) Descriptor() ([]byte, []int) {
 	return file_game_v1_game_proto_rawDescGZIP(), []int{2}
 }
 
-type MakeMoveRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	GameId        string                 `protobuf:"bytes,1,opt,name=game_id,json=gameId,proto3" json:"game_id,omitempty"`
-	Move          string                 `protobuf:"bytes,2,opt,name=move,proto3" json:"move,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *MakeMoveRequest) Reset() {
-	*x = MakeMoveRequest{}
-	mi := &file_game_v1_game_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *MakeMoveRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MakeMoveRequest) ProtoMessage() {}
-
-func (x *MakeMoveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_game_v1_game_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use MakeMoveRequest.ProtoReflect.Descriptor instead.
-func (*MakeMoveRequest) Descriptor() ([]byte, []int) {
-	return file_game_v1_game_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *MakeMoveRequest) GetGameId() string {
-	if x != nil {
-		return x.GameId
-	}
-	return ""
-}
-
-func (x *MakeMoveRequest) GetMove() string {
-	if x != nil {
-		return x.Move
-	}
-	return ""
-}
-
-type MakeMoveResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *MakeMoveResponse) Reset() {
-	*x = MakeMoveResponse{}
-	mi := &file_game_v1_game_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *MakeMoveResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MakeMoveResponse) ProtoMessage() {}
-
-func (x *MakeMoveResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_game_v1_game_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use MakeMoveResponse.ProtoReflect.Descriptor instead.
-func (*MakeMoveResponse) Descriptor() ([]byte, []int) {
-	return file_game_v1_game_proto_rawDescGZIP(), []int{4}
-}
-
 var File_game_v1_game_proto protoreflect.FileDescriptor
 
 const file_game_v1_game_proto_rawDesc = "" +
 	"\n" +
-	"\x12game/v1/game.proto\x12\agame.v1\x1a\x1bbuf/validate/validate.proto\"e\n" +
+	"\x12game/v1/game.proto\x12\agame.v1\x1a\x1bbuf/validate/validate.proto\"\x8e\x01\n" +
 	"\x06Player\x12\x1b\n" +
 	"\x02id\x18\x01 \x01(\tB\v\xbaH\b\xc8\x01\x01r\x03\xb0\x01\x01R\x02id\x12\x1a\n" +
 	"\x04name\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\"\n" +
 	"\x06rating\x18\x03 \x01(\x05B\n" +
-	"\xbaH\a\xc8\x01\x01\x1a\x02(\x00R\x06rating\"\xb9\x01\n" +
-	"\x11CreateGameRequest\x122\n" +
-	"\fwhite_player\x18\x01 \x01(\v2\x0f.game.v1.PlayerR\vwhitePlayer\x122\n" +
-	"\fblack_player\x18\x02 \x01(\v2\x0f.game.v1.PlayerR\vblackPlayer\x12<\n" +
-	"\x0ftime_control_id\x18\x03 \x01(\tB\x14\xbaH\x11\xc8\x01\x01r\f2\n" +
+	"\xbaH\a\xc8\x01\x01\x1a\x02(\x00R\x06rating\x12'\n" +
+	"\x05color\x18\x04 \x01(\tB\x11\xbaH\x0e\xc8\x01\x01r\t2\a^(w|b)$R\x05color\"|\n" +
+	"\x11CreateGameRequest\x12)\n" +
+	"\aplayers\x18\x01 \x03(\v2\x0f.game.v1.PlayerR\aplayers\x12<\n" +
+	"\x0ftime_control_id\x18\x02 \x01(\tB\x14\xbaH\x11\xc8\x01\x01r\f2\n" +
 	"^\\d+\\+\\d+$R\rtimeControlId\"\x14\n" +
-	"\x12CreateGameResponse\"H\n" +
-	"\x0fMakeMoveRequest\x12!\n" +
-	"\agame_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x06gameId\x12\x12\n" +
-	"\x04move\x18\x02 \x01(\tR\x04move\"\x12\n" +
-	"\x10MakeMoveResponse2\x99\x01\n" +
+	"\x12CreateGameResponse2T\n" +
 	"\vGameService\x12E\n" +
 	"\n" +
-	"CreateGame\x12\x1a.game.v1.CreateGameRequest\x1a\x1b.game.v1.CreateGameResponse\x12C\n" +
-	"\bMakeMove\x12\x18.game.v1.MakeMoveRequest\x1a\x19.game.v1.MakeMoveResponse(\x010\x01B\x14Z\x12gen/game/v1;gamev1b\x06proto3"
+	"CreateGame\x12\x1a.game.v1.CreateGameRequest\x1a\x1b.game.v1.CreateGameResponseB\x14Z\x12gen/game/v1;gamev1b\x06proto3"
 
 var (
 	file_game_v1_game_proto_rawDescOnce sync.Once
@@ -303,26 +210,21 @@ func file_game_v1_game_proto_rawDescGZIP() []byte {
 	return file_game_v1_game_proto_rawDescData
 }
 
-var file_game_v1_game_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_game_v1_game_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_game_v1_game_proto_goTypes = []any{
 	(*Player)(nil),             // 0: game.v1.Player
 	(*CreateGameRequest)(nil),  // 1: game.v1.CreateGameRequest
 	(*CreateGameResponse)(nil), // 2: game.v1.CreateGameResponse
-	(*MakeMoveRequest)(nil),    // 3: game.v1.MakeMoveRequest
-	(*MakeMoveResponse)(nil),   // 4: game.v1.MakeMoveResponse
 }
 var file_game_v1_game_proto_depIdxs = []int32{
-	0, // 0: game.v1.CreateGameRequest.white_player:type_name -> game.v1.Player
-	0, // 1: game.v1.CreateGameRequest.black_player:type_name -> game.v1.Player
-	1, // 2: game.v1.GameService.CreateGame:input_type -> game.v1.CreateGameRequest
-	3, // 3: game.v1.GameService.MakeMove:input_type -> game.v1.MakeMoveRequest
-	2, // 4: game.v1.GameService.CreateGame:output_type -> game.v1.CreateGameResponse
-	4, // 5: game.v1.GameService.MakeMove:output_type -> game.v1.MakeMoveResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0, // 0: game.v1.CreateGameRequest.players:type_name -> game.v1.Player
+	1, // 1: game.v1.GameService.CreateGame:input_type -> game.v1.CreateGameRequest
+	2, // 2: game.v1.GameService.CreateGame:output_type -> game.v1.CreateGameResponse
+	2, // [2:3] is the sub-list for method output_type
+	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_game_v1_game_proto_init() }
@@ -336,7 +238,7 @@ func file_game_v1_game_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_game_v1_game_proto_rawDesc), len(file_game_v1_game_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
