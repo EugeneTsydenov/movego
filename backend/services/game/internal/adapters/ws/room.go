@@ -23,25 +23,18 @@ func (r *room) RoomID() string {
 	return r.roomID
 }
 
-func (r *room) AddOnlineClient(clientID string, wsClient *wsclient.Client) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.clients[clientID] = newOnlineClient(clientID, wsClient)
-}
-
-func (r *room) AddOfflineClients(clientIDs []string) {
+func (r *room) AddClients(clientIDs []string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for _, id := range clientIDs {
 		if _, ok := r.clients[id]; ok {
 			continue
 		}
-		r.clients[id] = newOfflineClient(id)
+		r.clients[id] = newClient(id)
 	}
 }
 
-func (r *room) DisconnectAll(
-	onDisconn func(ctx context.Context, client *client) error,
+func (r *room) TimeoutAll(
 	onTimeout func(ctx context.Context, clientID string) error,
 ) {
 	r.mu.Lock()
@@ -52,7 +45,7 @@ func (r *room) DisconnectAll(
 	r.mu.Unlock()
 
 	for _, c := range clientsList {
-		_ = c.Disconnect(onDisconn, onTimeout)
+		c.StartInitialTimeout(onTimeout)
 	}
 }
 
@@ -68,18 +61,19 @@ func (r *room) Client(clientID string) (*client, error) {
 
 func (r *room) ConnectClient(
 	clientID string,
+	sessionID string,
 	wsClient *wsclient.Client,
 	onConn func(ctx context.Context, clientID string) error,
 ) {
 	r.mu.Lock()
 	client, ok := r.clients[clientID]
 	if !ok {
-		client = newOfflineClient(clientID)
+		client = newClient(clientID)
 		r.clients[clientID] = client
 	}
 	r.mu.Unlock()
 
-	client.Connect(wsClient, onConn)
+	client.Connect(sessionID, wsClient, onConn)
 }
 
 func (r *room) IsAllConnected() bool {
@@ -111,6 +105,7 @@ func (r *room) IsConnected(clientID string) bool {
 
 func (r *room) DisconnectClient(
 	clientID string,
+	sessionID string,
 	onDisconn func(ctx context.Context, client *client) error,
 	onTimeout func(ctx context.Context, clientID string) error,
 ) {
@@ -121,7 +116,7 @@ func (r *room) DisconnectClient(
 	if !ok {
 		return
 	}
-	_ = client.Disconnect(onDisconn, onTimeout)
+	_ = client.Disconnect(sessionID, onDisconn, onTimeout)
 }
 
 func (r *room) SendToClient(ctx context.Context, clientID string, msg []byte) error {

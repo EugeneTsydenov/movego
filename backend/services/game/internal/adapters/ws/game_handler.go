@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/google/uuid"
 )
 
 type GameService interface {
@@ -74,6 +75,7 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sessionID := uuid.Must(uuid.NewV7())
 	client := wsclient.New(conn)
 
 	bgCtx, cancel := context.WithCancel(context.Background())
@@ -85,11 +87,11 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	onDisconn := h.makeOnDisconnect(gameID.String())
 	onTimeout := h.makeOnTimeout(gameID.String())
 
-	defer h.manager.DisconnectClient(gameID.String(), userID.String(), onDisconn, onTimeout)
+	defer h.manager.DisconnectClient(gameID.String(), userID.String(), sessionID.String(), onDisconn, onTimeout)
 
-	h.manager.CreateRoom(gameID.String(), game.PlayerIDStrings(), onDisconn, onTimeout)
+	h.manager.CreateRoom(gameID.String(), game.PlayerIDStrings(), onTimeout)
 
-	err = h.manager.OnPlayerConnect(bgCtx, gameID.String(), userID.String(), client, onConn, onStart)
+	err = h.manager.OnPlayerConnect(bgCtx, gameID.String(), userID.String(), sessionID.String(), client, onConn, onStart)
 	if err != nil {
 		h.logger.WarnContext(bgCtx, "failed to connect player", "user_id", userID, "game_id", gameID, "err", err)
 		_ = conn.Close(websocket.StatusInternalError, "failed to join room")

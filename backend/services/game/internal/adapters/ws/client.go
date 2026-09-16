@@ -10,6 +10,7 @@ import (
 type client struct {
 	mu               sync.RWMutex
 	id               string
+	sessionID        string
 	wsClient         *wsclient.Client
 	isOnline         bool
 	timeoutActive    bool
@@ -17,16 +18,7 @@ type client struct {
 	disconnExpiresAt time.Time
 }
 
-func newOnlineClient(id string, wsClient *wsclient.Client) *client {
-	return &client{
-		id:            id,
-		wsClient:      wsClient,
-		isOnline:      true,
-		timeoutActive: false,
-	}
-}
-
-func newOfflineClient(id string) *client {
+func newClient(id string) *client {
 	return &client{
 		id:            id,
 		isOnline:      false,
@@ -38,6 +30,10 @@ func (c *client) ID() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.id
+}
+
+func (c *client) SessionID() string {
+	return c.sessionID
 }
 
 func (c *client) IsOnline() bool {
@@ -58,8 +54,9 @@ func (c *client) DisconnExpiresAt() time.Time {
 	return c.disconnExpiresAt
 }
 
-func (c *client) Connect(wsClient *wsclient.Client, onConn func(ctx context.Context, clientID string) error) error {
+func (c *client) Connect(sessionID string, wsClient *wsclient.Client, onConn func(ctx context.Context, clientID string) error) error {
 	c.mu.Lock()
+	c.sessionID = sessionID
 	c.wsClient = wsClient
 	c.isOnline = true
 	c.timeoutActive = false
@@ -77,11 +74,41 @@ func (c *client) Connect(wsClient *wsclient.Client, onConn func(ctx context.Cont
 	return nil
 }
 
+func (c *client) StartInitialTimeout(onTimeout func(ctx context.Context, clientID string) error) {
+	c.mu.Lock()
+	c.wsClient = nil
+	c.isOnline = false
+	c.timeoutActive = true
+	c.disconnExpiresAt = time.Now().UTC().Add(1 * time.Minute)
+
+	if c.connTimer != nil {
+		c.connTimer.Stop()
+	}
+
+	c.connTimer = time.AfterFunc(1*time.Minute, func() {
+		if c.IsOnline() || !c.TimeoutActive() {
+			return
+		}
+
+		if onTimeout != nil {
+			_ = onTimeout(context.Background(), c.ID())
+		}
+	})
+	c.mu.Unlock()
+}
+
 func (c *client) Disconnect(
+	sessionID string,
 	onDisconn func(ctx context.Context, client *client) error,
 	onTimeout func(ctx context.Context, clientID string) error,
 ) error {
 	c.mu.Lock()
+
+	if c.sessionID != sessionID {
+		c.mu.Unlock()
+		return nil
+	}
+
 	ws := c.wsClient
 	c.wsClient = nil
 	c.isOnline = false

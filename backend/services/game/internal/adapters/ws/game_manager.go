@@ -36,7 +36,6 @@ func (m *GameManager) isRoomCreated(roomID string) bool {
 func (m *GameManager) CreateRoom(
 	roomID string,
 	clientIDs []string,
-	onDisconn func(ctx context.Context, client *client) error,
 	onTimeout func(ctx context.Context, clientID string) error,
 ) {
 	if m.isRoomCreated(roomID) {
@@ -53,14 +52,15 @@ func (m *GameManager) CreateRoom(
 	m.rooms[roomID] = room
 	m.mu.Unlock()
 
-	room.AddOfflineClients(clientIDs)
-	room.DisconnectAll(onDisconn, onTimeout)
+	room.AddClients(clientIDs)
+	room.TimeoutAll(onTimeout)
 }
 
 func (m *GameManager) OnPlayerConnect(
 	ctx context.Context,
 	roomID,
 	clientID string,
+	sessionId string,
 	wsClient *wsclient.Client,
 	onConn func(ctx context.Context, clientID string) error,
 	onStart func(ctx context.Context) error,
@@ -71,7 +71,7 @@ func (m *GameManager) OnPlayerConnect(
 	if !ok {
 		return fmt.Errorf("room is not exists")
 	}
-	room.ConnectClient(clientID, wsClient, onConn)
+	room.ConnectClient(clientID, sessionId, wsClient, onConn)
 	if room.IsAllConnected() {
 		err := onStart(ctx)
 		if err != nil {
@@ -85,6 +85,7 @@ func (m *GameManager) OnPlayerConnect(
 func (m *GameManager) DisconnectClient(
 	roomID,
 	clientID string,
+	sessionID string,
 	onDisconn func(ctx context.Context, client *client) error,
 	onTimeout func(ctx context.Context, clientID string) error,
 ) {
@@ -95,7 +96,7 @@ func (m *GameManager) DisconnectClient(
 	if !ok {
 		return
 	}
-	room.DisconnectClient(clientID, onDisconn, onTimeout)
+	room.DisconnectClient(clientID, sessionID, onDisconn, onTimeout)
 }
 
 func (m *GameManager) SendToClient(ctx context.Context, roomID, clientID string, msg []byte) error {
