@@ -152,7 +152,7 @@ func (h *GameHandler) makeOnStart(gameID domain.GameID) func(ctx context.Context
 
 func (h *GameHandler) makeOnDisconnect(gameID string) func(ctx context.Context, client *client) error {
 	return func(ctx context.Context, client *client) error {
-		msg, err := json.Marshal(toDisconnectEvent(client.ClientID(), client.DisconnExpiresAt()))
+		msg, err := json.Marshal(toDisconnectEvent(client.ID(), client.DisconnExpiresAt()))
 		if err != nil {
 			return err
 		}

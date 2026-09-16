@@ -9,7 +9,7 @@ import (
 
 type client struct {
 	mu               sync.RWMutex
-	clientID         string
+	id               string
 	wsClient         *wsclient.Client
 	isOnline         bool
 	timeoutActive    bool
@@ -17,27 +17,27 @@ type client struct {
 	disconnExpiresAt time.Time
 }
 
-func newOnlineClient(clientID string, wsClient *wsclient.Client) *client {
+func newOnlineClient(id string, wsClient *wsclient.Client) *client {
 	return &client{
-		clientID:      clientID,
+		id:            id,
 		wsClient:      wsClient,
 		isOnline:      true,
 		timeoutActive: false,
 	}
 }
 
-func newOfflineClient(clientID string) *client {
+func newOfflineClient(id string) *client {
 	return &client{
-		clientID:      clientID,
+		id:            id,
 		isOnline:      false,
 		timeoutActive: false,
 	}
 }
 
-func (c *client) ClientID() string {
+func (c *client) ID() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.clientID
+	return c.id
 }
 
 func (c *client) IsOnline() bool {
@@ -68,7 +68,7 @@ func (c *client) Connect(wsClient *wsclient.Client, onConn func(ctx context.Cont
 		c.connTimer.Stop()
 		c.connTimer = nil
 	}
-	clientID := c.clientID
+	clientID := c.id
 	c.mu.Unlock()
 
 	if onConn != nil {
@@ -98,7 +98,7 @@ func (c *client) Disconnect(
 		}
 
 		if onTimeout != nil {
-			_ = onTimeout(context.Background(), c.ClientID())
+			_ = onTimeout(context.Background(), c.ID())
 		}
 	})
 	c.mu.Unlock()
