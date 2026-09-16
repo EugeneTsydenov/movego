@@ -25,7 +25,7 @@ func NewGameManager() *GameManager {
 	}
 }
 
-func (m *GameManager) IsRoomCreated(roomID string) bool {
+func (m *GameManager) isRoomCreated(roomID string) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	_, ok := m.rooms[roomID]
@@ -37,8 +37,12 @@ func (m *GameManager) CreateRoom(
 	roomID string,
 	clientIDs []string,
 	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context) error,
+	onTimeout func(ctx context.Context, clientID string) error,
 ) {
+	if m.isRoomCreated(roomID) {
+		return
+	}
+
 	m.mu.Lock()
 	if _, ok := m.rooms[roomID]; ok {
 		m.mu.Unlock()
@@ -82,7 +86,7 @@ func (m *GameManager) DisconnectClient(
 	roomID,
 	clientID string,
 	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context) error,
+	onTimeout func(ctx context.Context, clientID string) error,
 ) {
 	m.mu.RLock()
 	room, ok := m.rooms[roomID]

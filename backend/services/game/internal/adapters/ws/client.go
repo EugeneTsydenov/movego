@@ -79,7 +79,7 @@ func (c *client) Connect(wsClient *wsclient.Client, onConn func(ctx context.Cont
 
 func (c *client) Disconnect(
 	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context) error,
+	onTimeout func(ctx context.Context, clientID string) error,
 ) error {
 	c.mu.Lock()
 	ws := c.wsClient
@@ -98,7 +98,7 @@ func (c *client) Disconnect(
 		}
 
 		if onTimeout != nil {
-			_ = onTimeout(context.Background())
+			_ = onTimeout(context.Background(), c.ClientID())
 		}
 	})
 	c.mu.Unlock()

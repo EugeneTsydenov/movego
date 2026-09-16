@@ -17,7 +17,7 @@ import (
 
 type GameService interface {
 	GetState(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID) (*domain.Game, error)
-	StartGame(ctx context.Context, game *domain.Game, now time.Time) error
+	StartGame(ctx context.Context, gameID domain.GameID, now time.Time) error
 	MakeMove(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID, move domain.Move) (application.MakeMoveOutput, error)
 }
 
@@ -80,36 +80,14 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	go client.WritePump(bgCtx)
 
+	onConn := h.makeOnConnection(gameID.String())
+	onStart := h.makeOnStart(gameID)
 	onDisconn := h.makeOnDisconnect(gameID.String())
-	onTimeout := h.makeOnTimeout(gameID.String(), userID.String())
+	onTimeout := h.makeOnTimeout(gameID.String())
 
 	defer h.manager.DisconnectClient(gameID.String(), userID.String(), onDisconn, onTimeout)
 
-	if !h.manager.IsRoomCreated(gameID.String()) {
-		h.manager.CreateRoom(gameID.String(), game.PlayerIDStrings(), onDisconn, onTimeout)
-	}
-
-	onConn := func(ctx context.Context, clientID string) error {
-		msg, err := json.Marshal(toConnectEvent(clientID))
-		if err != nil {
-			return err
-		}
-
-		return h.manager.BroadcastToClients(context.Background(), gameID.String(), msg)
-	}
-
-	onStart := func(ctx context.Context) error {
-		err := h.gameService.StartGame(ctx, game, time.Now())
-		if err != nil {
-			return err
-		}
-		msg, err := json.Marshal(toStartEvent())
-		if err != nil {
-			return err
-		}
-
-		return h.manager.BroadcastToClients(context.Background(), gameID.String(), msg)
-	}
+	h.manager.CreateRoom(gameID.String(), game.PlayerIDStrings(), onDisconn, onTimeout)
 
 	err = h.manager.OnPlayerConnect(bgCtx, gameID.String(), userID.String(), client, onConn, onStart)
 	if err != nil {
@@ -146,6 +124,32 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *GameHandler) makeOnConnection(gameID string) func(ctx context.Context, clientID string) error {
+	return func(ctx context.Context, clientID string) error {
+		msg, err := json.Marshal(toConnectEvent(clientID))
+		if err != nil {
+			return err
+		}
+
+		return h.manager.BroadcastToClients(context.Background(), gameID, msg)
+	}
+}
+
+func (h *GameHandler) makeOnStart(gameID domain.GameID) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		err := h.gameService.StartGame(ctx, gameID, time.Now())
+		if err != nil {
+			return err
+		}
+		msg, err := json.Marshal(toStartEvent())
+		if err != nil {
+			return err
+		}
+
+		return h.manager.BroadcastToClients(context.Background(), gameID.String(), msg)
+	}
+}
+
 func (h *GameHandler) makeOnDisconnect(gameID string) func(ctx context.Context, client *client) error {
 	return func(ctx context.Context, client *client) error {
 		msg, err := json.Marshal(toDisconnectEvent(client.ClientID(), client.DisconnExpiresAt()))
@@ -157,17 +161,8 @@ func (h *GameHandler) makeOnDisconnect(gameID string) func(ctx context.Context, 
 	}
 }
 
-func (h *GameHandler) disconnectClient(
-	gameID,
-	userID string,
-	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context) error,
-) {
-	h.manager.DisconnectClient(gameID, userID, onDisconn, onTimeout)
-}
-
-func (h *GameHandler) makeOnTimeout(gameID string, clientID string) func(ctx context.Context) error {
-	return func(ctx context.Context) error {
+func (h *GameHandler) makeOnTimeout(gameID string) func(ctx context.Context, clientID string) error {
+	return func(ctx context.Context, clientID string) error {
 		msg, err := json.Marshal(toTimeoutEvent(clientID))
 		if err != nil {
 			return nil

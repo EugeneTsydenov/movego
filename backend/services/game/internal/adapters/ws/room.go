@@ -42,7 +42,7 @@ func (r *room) AddOfflineClients(clientIDs []string) {
 
 func (r *room) DisconnectAll(
 	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context) error,
+	onTimeout func(ctx context.Context, clientID string) error,
 ) {
 	r.mu.Lock()
 	clientsList := make([]*client, 0, len(r.clients))
@@ -112,7 +112,7 @@ func (r *room) IsConnected(clientID string) bool {
 func (r *room) DisconnectClient(
 	clientID string,
 	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context) error,
+	onTimeout func(ctx context.Context, clientID string) error,
 ) {
 	r.mu.RLock()
 	client, ok := r.clients[clientID]

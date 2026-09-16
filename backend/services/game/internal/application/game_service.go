@@ -59,10 +59,13 @@ func (s *GameService) GetState(ctx context.Context, gameID domain.GameID, player
 	return game, nil
 }
 
-func (s *GameService) StartGame(ctx context.Context, game *domain.Game, now time.Time) error {
-	if err := game.Start(now); err != nil {
+func (s *GameService) StartGame(ctx context.Context, gameID domain.GameID, now time.Time) error {
+	game, err := s.gameRepo.GetByID(ctx, gameID)
+	if err != nil {
 		return err
 	}
+
+	game.Start(now)
 
 	if err := s.gameRepo.Save(ctx, game); err != nil {
 		return err

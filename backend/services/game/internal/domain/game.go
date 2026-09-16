@@ -150,14 +150,10 @@ func (g *Game) EnsurePlayer(id PlayerID) error {
 	return nil
 }
 
-func (g *Game) Start(now time.Time) error {
-	if g.status != StatusCreated {
-		return ErrGameAlreadyStarted
-	}
+func (g *Game) Start(now time.Time) {
 	g.status = StatusInProgress
 	g.turnStartedAt = now
 	g.updatedAt = now
-	return nil
 }
 
 func (g *Game) IsClockRunning() bool {
