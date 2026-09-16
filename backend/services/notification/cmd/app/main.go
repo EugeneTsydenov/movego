@@ -4,12 +4,11 @@ import (
 	"context"
 	"flag"
 	"log/slog"
+	"notification/internal/config"
 	"os"
 	"os/signal"
 	"shared/logger"
 	"syscall"
-
-	"notification/internal/config"
 )
 
 const envPrefix = "NOTIFICATION_SERVICE"

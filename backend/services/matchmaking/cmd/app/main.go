@@ -4,12 +4,11 @@ import (
 	"context"
 	"flag"
 	"log/slog"
+	"matchmaking/internal/config"
 	"os"
 	"os/signal"
 	"shared/logger"
 	"syscall"
-
-	"matchmaking/internal/config"
 )
 
 const envPrefix = "MATCHMAKING_SERVICE"

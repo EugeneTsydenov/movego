@@ -3,23 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	gamev1 "gen/game/v1"
-	matchmakingv1 "gen/matchmaking/v1"
 	"log/slog"
-	"net"
-
 	"matchmaking/internal/adapters/game"
-	grpcadapter "matchmaking/internal/adapters/grpc"
-	redisadapter "matchmaking/internal/adapters/redis"
 	"matchmaking/internal/application"
 	"matchmaking/internal/config"
-
+	"net"
 	"shared/auth"
-	sharedinterceptor "shared/interceptor"
-	sharedredis "shared/redis"
 	"shared/telemetry"
 
 	"buf.build/go/protovalidate"
+	gamev1 "gen/game/v1"
+	matchmakingv1 "gen/matchmaking/v1"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"golang.org/x/sync/errgroup"
@@ -27,6 +21,12 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
+
+	grpcadapter "matchmaking/internal/adapters/grpc"
+	redisadapter "matchmaking/internal/adapters/redis"
+
+	sharedinterceptor "shared/interceptor"
+	sharedredis "shared/redis"
 )
 
 type app struct {

@@ -2,8 +2,9 @@ package grpc
 
 import (
 	"context"
-	userv1 "gen/user/v1"
 	"user/internal/application"
+
+	userv1 "gen/user/v1"
 )
 
 type authService interface {

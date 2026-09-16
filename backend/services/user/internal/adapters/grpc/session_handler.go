@@ -2,14 +2,19 @@ package grpc
 
 import (
 	"context"
-	userv1 "gen/user/v1"
 	"shared/auth"
 	"user/internal/application"
 	"user/internal/domain"
+
+	userv1 "gen/user/v1"
 )
 
 type sessionService interface {
-	GetActiveSessions(ctx context.Context, userID domain.UserID, sessionID domain.SessionID) ([]application.SessionDTO, error)
+	GetActiveSessions(
+		ctx context.Context,
+		userID domain.UserID,
+		sessionID domain.SessionID,
+	) ([]application.SessionDTO, error)
 	RevokeSession(ctx context.Context, userID domain.UserID, sessionID domain.SessionID) error
 	RevokeOtherSessions(ctx context.Context, userID domain.UserID, currSessionID domain.SessionID) error
 }
@@ -25,7 +30,10 @@ func NewSessionHandler(sessionService sessionService) *SessionHandler {
 	}
 }
 
-func (h *SessionHandler) GetActiveSessions(ctx context.Context, req *userv1.GetActiveSessionsRequest) (*userv1.GetActiveSessionsResponse, error) {
+func (h *SessionHandler) GetActiveSessions(
+	ctx context.Context,
+	req *userv1.GetActiveSessionsRequest,
+) (*userv1.GetActiveSessionsResponse, error) {
 	userID, err := domain.NewUserID(auth.UserIDFromContext(ctx).String())
 	if err != nil {
 		return nil, err
@@ -43,7 +51,10 @@ func (h *SessionHandler) GetActiveSessions(ctx context.Context, req *userv1.GetA
 	}, nil
 }
 
-func (h *SessionHandler) RevokeSession(ctx context.Context, req *userv1.RevokeSessionRequest) (*userv1.RevokeSessionResponse, error) {
+func (h *SessionHandler) RevokeSession(
+	ctx context.Context,
+	req *userv1.RevokeSessionRequest,
+) (*userv1.RevokeSessionResponse, error) {
 	userID, err := domain.NewUserID(auth.UserIDFromContext(ctx).String())
 	if err != nil {
 		return nil, err
@@ -59,7 +70,10 @@ func (h *SessionHandler) RevokeSession(ctx context.Context, req *userv1.RevokeSe
 	return &userv1.RevokeSessionResponse{}, nil
 }
 
-func (h *SessionHandler) RevokeOtherSessions(ctx context.Context, req *userv1.RevokeOtherSessionsRequest) (*userv1.RevokeOtherSessionsResponse, error) {
+func (h *SessionHandler) RevokeOtherSessions(
+	ctx context.Context,
+	req *userv1.RevokeOtherSessionsRequest,
+) (*userv1.RevokeOtherSessionsResponse, error) {
 	userID, err := domain.NewUserID(auth.UserIDFromContext(ctx).String())
 	if err != nil {
 		return nil, err

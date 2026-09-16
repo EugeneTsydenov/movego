@@ -29,10 +29,11 @@ func (m *GameManager) isRoomCreated(roomID string) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	_, ok := m.rooms[roomID]
+
 	return ok
 }
 
-// create room with fill offline clients
+// create room with fill offline clients.
 func (m *GameManager) CreateRoom(
 	roomID string,
 	clientIDs []string,
@@ -45,6 +46,7 @@ func (m *GameManager) CreateRoom(
 	m.mu.Lock()
 	if _, ok := m.rooms[roomID]; ok {
 		m.mu.Unlock()
+
 		return
 	}
 
@@ -106,6 +108,7 @@ func (m *GameManager) SendToClient(ctx context.Context, roomID, clientID string,
 	if !ok {
 		return fmt.Errorf("room is not exists")
 	}
+
 	return room.SendToClient(ctx, clientID, msg)
 }
 
@@ -116,6 +119,7 @@ func (m *GameManager) BroadcastToClients(ctx context.Context, roomID string, msg
 	if !ok {
 		return fmt.Errorf("room is not exists")
 	}
+
 	return room.BroadcastToClients(ctx, msg)
 }
 

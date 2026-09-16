@@ -186,7 +186,13 @@ func (s *AuthService) Refresh(ctx context.Context, in RefreshInput) (RefreshOutp
 		if err != nil {
 			return err
 		}
-		session = domain.NewSession(user.ID(), secret.HashToken(secr), oldSession.UserAgent(), oldSession.ClientIP(), s.refreshTTL)
+		session = domain.NewSession(
+			user.ID(),
+			secret.HashToken(secr),
+			oldSession.UserAgent(),
+			oldSession.ClientIP(),
+			s.refreshTTL,
+		)
 		if err = repos.Sessions().Save(ctx, session); err != nil {
 			return err
 		}

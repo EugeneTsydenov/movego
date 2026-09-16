@@ -1,8 +1,9 @@
 package config
 
 import (
-	sharedconfig "shared/config"
 	"time"
+
+	sharedconfig "shared/config"
 )
 
 type Config struct {

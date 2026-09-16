@@ -31,7 +31,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"*"},
 	})
-
 	if err != nil {
 		h.logger.InfoContext(r.Context(), "failed to accept websocket", "user_id", userID, "err", err)
 		return
@@ -43,9 +42,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for {
 		_, _, err := conn.Read(r.Context())
 		if err != nil {
-			h.logger.InfoContext(r.Context(), "failed to read from websocket", "user_id", userID, "err", err)
+			h.logger.InfoContext(
+				r.Context(),
+				"failed to read from websocket",
+				"user_id",
+				userID,
+				"err",
+				err,
+			)
 			return
 		}
 	}
-
 }

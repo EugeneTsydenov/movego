@@ -63,9 +63,21 @@ func (w *MatchmakingWorker) proccessMatching(ctx context.Context) {
 				white.SetColor(domain.White)
 				black.SetColor(domain.Black)
 
-				err = w.gameClient.CreateGame(ctx, []*domain.Player{white, black}, white.TimeControlID())
+				err = w.gameClient.CreateGame(
+					ctx,
+					[]*domain.Player{white, black},
+					white.TimeControlID(),
+				)
 				if err != nil {
-					w.logger.Error("failed to create game", "err", err, "p1", p1.ID(), "p2", p2.ID())
+					w.logger.Error(
+						"failed to create game",
+						"err",
+						err,
+						"p1",
+						p1.ID(),
+						"p2",
+						p2.ID(),
+					)
 					continue
 				}
 

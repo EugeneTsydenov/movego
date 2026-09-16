@@ -6,26 +6,26 @@ import (
 	"log/slog"
 	"net"
 	"os"
-
-	userv1 "gen/user/v1"
-	grpcadapter "user/internal/adapters/grpc"
+	"shared/auth"
+	"shared/telemetry"
 	"user/internal/adapters/jwt"
 	"user/internal/adapters/postgres"
 	"user/internal/adapters/postgres/sqlc"
 	"user/internal/application"
 	"user/internal/config"
 
-	"shared/auth"
-	sharedinterceptor "shared/interceptor"
-	"shared/telemetry"
-
 	"buf.build/go/protovalidate"
+	userv1 "gen/user/v1"
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	sharedinterceptor "shared/interceptor"
+
+	grpcadapter "user/internal/adapters/grpc"
 )
 
 type app struct {
@@ -133,7 +133,11 @@ func (a *app) InitDeps() error {
 	credentialRepo := postgres.NewCredentialRepo(querier)
 	sessionRepo := postgres.NewSessionRepo(querier)
 
-	tokenIssuer := jwt.NewIssuer([]byte(os.Getenv("USER_SERVICE_JWT_SECRET_KEY")), a.cfg.JWT.AccessTTL, a.cfg.JWT.Issuer)
+	tokenIssuer := jwt.NewIssuer(
+		[]byte(os.Getenv("USER_SERVICE_JWT_SECRET_KEY")),
+		a.cfg.JWT.AccessTTL,
+		a.cfg.JWT.Issuer,
+	)
 
 	authService := application.NewAuthService(
 		unitOfWork,

@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"game/internal/config"
 	"log/slog"
 	"os"
 	"os/signal"
 	"shared/logger"
 	"syscall"
-
-	"game/internal/config"
 )
 
 const envPrefix = "GAME_SERVICE"

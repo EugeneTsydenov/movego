@@ -6,11 +6,8 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-
-	natsadapter "notification/internal/adapters/nats"
 	"notification/internal/adapters/ws"
 	"notification/internal/config"
-
 	"shared/otelnats"
 	"shared/telemetry"
 
@@ -18,6 +15,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/sync/errgroup"
+	natsadapter "notification/internal/adapters/nats"
 )
 
 type app struct {

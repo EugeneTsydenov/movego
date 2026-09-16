@@ -1,6 +1,6 @@
 {
     "formatters": {
-        "enable": ["gci", "gofmt", "gofumpt", "goimports", "golines"],
+        "enable": ["gofumpt", "golines"],
         "exclusions": {
             "generated": "lax",
             "paths": ["third_party$", "builtin$", "examples$"]
@@ -61,7 +61,6 @@
             "unparam",
             "usestdlibvars",
             "whitespace",
-            "wsl",
             "errcheck",
             "errorlint",
             "contextcheck",
@@ -125,8 +124,7 @@
                 "path": "stdout"
             }
         },
-        "path-prefix": "",
-        "sort-order": ["linter", "severity", "file"]
+        "path-prefix": ""
     },
     "run": {
         "allow-parallel-runners": true,

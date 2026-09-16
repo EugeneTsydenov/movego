@@ -29,7 +29,13 @@ func (s *GameService) CreateGame(ctx context.Context, in CreateGameInput) error 
 	for i := 0; i < len(in.Players); i++ {
 		playerDTO := in.Players[i]
 		initialTime, _ := timeControl.Duration()
-		players[i] = domain.NewPlayer(playerDTO.ID, playerDTO.Name, playerDTO.Rating, playerDTO.Color, initialTime)
+		players[i] = domain.NewPlayer(
+			playerDTO.ID,
+			playerDTO.Name,
+			playerDTO.Rating,
+			playerDTO.Color,
+			initialTime,
+		)
 	}
 
 	game := domain.NewGame(players, timeControl)
@@ -50,7 +56,11 @@ func (s *GameService) CreateGame(ctx context.Context, in CreateGameInput) error 
 	return nil
 }
 
-func (s *GameService) GetState(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID) (*domain.Game, error) {
+func (s *GameService) GetState(
+	ctx context.Context,
+	gameID domain.GameID,
+	playerID domain.PlayerID,
+) (*domain.Game, error) {
 	game, err := s.gameRepo.GetByID(ctx, gameID)
 	if err != nil {
 		return nil, err
@@ -74,7 +84,12 @@ func (s *GameService) StartGame(ctx context.Context, gameID domain.GameID, now t
 	return nil
 }
 
-func (s *GameService) MakeMove(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID, move domain.Move) (MakeMoveOutput, error) {
+func (s *GameService) MakeMove(
+	ctx context.Context,
+	gameID domain.GameID,
+	playerID domain.PlayerID,
+	move domain.Move,
+) (MakeMoveOutput, error) {
 	game, err := s.gameRepo.GetByID(ctx, gameID)
 	if err != nil {
 		return MakeMoveOutput{}, err

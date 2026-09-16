@@ -27,7 +27,10 @@ func (r *SessionRepo) Save(ctx context.Context, session *domain.Session) error {
 	return mapSessionError(err)
 }
 
-func (r *SessionRepo) FindValid(ctx context.Context, sessionID domain.SessionID) (*domain.Session, *domain.User, error) {
+func (r *SessionRepo) FindValid(
+	ctx context.Context,
+	sessionID domain.SessionID,
+) (*domain.Session, *domain.User, error) {
 	row, err := r.querier.FindValid(ctx, sessionID.UUID())
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

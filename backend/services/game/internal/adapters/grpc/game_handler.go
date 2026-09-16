@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"game/internal/application"
+
 	gamev1 "gen/game/v1"
 )
 
@@ -21,7 +22,10 @@ func NewGameHandler(gameService gameService) *GameHandler {
 	}
 }
 
-func (h *GameHandler) CreateGame(ctx context.Context, req *gamev1.CreateGameRequest) (*gamev1.CreateGameResponse, error) {
+func (h *GameHandler) CreateGame(
+	ctx context.Context,
+	req *gamev1.CreateGameRequest,
+) (*gamev1.CreateGameResponse, error) {
 	in, err := toCreateGameInput(req)
 	if err != nil {
 		return nil, err

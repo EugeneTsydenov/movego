@@ -4,16 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
 	"user/internal/application"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
-var (
-	ErrInvalidToken = errors.New("invalid or expired token")
-)
+var ErrInvalidToken = errors.New("invalid or expired token")
 
 type customClaims struct {
 	jwt.RegisteredClaims

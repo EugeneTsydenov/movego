@@ -2,9 +2,10 @@ package grpc
 
 import (
 	"context"
-	matchmakingv1 "gen/matchmaking/v1"
 	"matchmaking/internal/application"
 	"shared/auth"
+
+	matchmakingv1 "gen/matchmaking/v1"
 )
 
 type matchmakingService interface {
@@ -22,7 +23,10 @@ func NewMatchmakingHandler(matchmakingService matchmakingService) *MatchmakingHa
 	}
 }
 
-func (h *MatchmakingHandler) JoinQueue(ctx context.Context, req *matchmakingv1.JoinQueueRequest) (*matchmakingv1.JoinQueueResponse, error) {
+func (h *MatchmakingHandler) JoinQueue(
+	ctx context.Context,
+	req *matchmakingv1.JoinQueueRequest,
+) (*matchmakingv1.JoinQueueResponse, error) {
 	userID := auth.UserIDFromContext(ctx)
 
 	in, err := toJoinQueueInput(userID, req)

@@ -80,10 +80,13 @@ func ValidationUnaryInterceptor(v protovalidate.Validator) grpc.UnaryServerInter
 					br := &errdetails.BadRequest{}
 
 					for _, violation := range valErr.Violations {
-						br.FieldViolations = append(br.FieldViolations, &errdetails.BadRequest_FieldViolation{
-							Field:       string(violation.FieldDescriptor.Name()),
-							Description: violation.String(),
-						})
+						br.FieldViolations = append(
+							br.FieldViolations,
+							&errdetails.BadRequest_FieldViolation{
+								Field:       string(violation.FieldDescriptor.Name()),
+								Description: violation.String(),
+							},
+						)
 					}
 
 					st := status.New(codes.InvalidArgument, err.Error())

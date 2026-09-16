@@ -15,7 +15,11 @@ func NewSessionService(sessionRepo domain.SessionRepo) *SessionService {
 	}
 }
 
-func (s *SessionService) GetActiveSessions(ctx context.Context, userID domain.UserID, sessionID domain.SessionID) ([]SessionDTO, error) {
+func (s *SessionService) GetActiveSessions(
+	ctx context.Context,
+	userID domain.UserID,
+	sessionID domain.SessionID,
+) ([]SessionDTO, error) {
 	sessions, err := s.sessionRepo.ListActiveByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -65,6 +69,10 @@ func (s *SessionService) RevokeSession(ctx context.Context, userID domain.UserID
 	return nil
 }
 
-func (s *SessionService) RevokeOtherSessions(ctx context.Context, userID domain.UserID, currSessionID domain.SessionID) error {
+func (s *SessionService) RevokeOtherSessions(
+	ctx context.Context,
+	userID domain.UserID,
+	currSessionID domain.SessionID,
+) error {
 	return s.sessionRepo.DeleteAllExcept(ctx, userID, currSessionID)
 }

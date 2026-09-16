@@ -69,7 +69,13 @@ func toDomainPlayer(dto playerDTO) (*domain.Player, error) {
 	if err != nil {
 		return nil, err
 	}
-	return domain.NewPlayer(id, dto.Name, domain.Rating(dto.Rating), dto.Color, time.Duration(dto.TimeRemaining)), nil
+	return domain.NewPlayer(
+		id,
+		dto.Name,
+		domain.Rating(dto.Rating),
+		dto.Color,
+		time.Duration(dto.TimeRemaining),
+	), nil
 }
 
 func toDomainPlayers(dtos []playerDTO) ([]*domain.Player, error) {

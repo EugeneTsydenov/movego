@@ -29,6 +29,7 @@ func newClient(id string) *client {
 func (c *client) ID() string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
 	return c.id
 }
 
@@ -39,22 +40,29 @@ func (c *client) SessionID() string {
 func (c *client) IsOnline() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
 	return c.isOnline
 }
 
 func (c *client) TimeoutActive() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
 	return c.timeoutActive
 }
 
 func (c *client) DisconnExpiresAt() time.Time {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
 	return c.disconnExpiresAt
 }
 
-func (c *client) Connect(sessionID string, wsClient *wsclient.Client, onConn func(ctx context.Context, clientID string) error) error {
+func (c *client) Connect(
+	sessionID string,
+	wsClient *wsclient.Client,
+	onConn func(ctx context.Context, clientID string) error,
+) error {
 	c.mu.Lock()
 	c.sessionID = sessionID
 	c.wsClient = wsClient
@@ -71,6 +79,7 @@ func (c *client) Connect(sessionID string, wsClient *wsclient.Client, onConn fun
 	if onConn != nil {
 		return onConn(context.Background(), clientID)
 	}
+
 	return nil
 }
 
@@ -106,6 +115,7 @@ func (c *client) Disconnect(
 
 	if c.sessionID != sessionID {
 		c.mu.Unlock()
+
 		return nil
 	}
 

@@ -5,15 +5,18 @@ import (
 	"unicode/utf8"
 )
 
-const minPasswordLength = 8
-const maxPasswordLength = 72
+const (
+	minPasswordLength = 8
+	maxPasswordLength = 72
+)
 
 type PlainPassword struct {
 	value string
 }
 
 func NewPlainPassword(passwordStr string) (PlainPassword, error) {
-	if utf8.RuneCountInString(passwordStr) < minPasswordLength || utf8.RuneCountInString(passwordStr) > maxPasswordLength {
+	if utf8.RuneCountInString(passwordStr) < minPasswordLength ||
+		utf8.RuneCountInString(passwordStr) > maxPasswordLength {
 		return PlainPassword{}, ErrWeakPassword
 	}
 

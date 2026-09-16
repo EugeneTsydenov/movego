@@ -2,8 +2,9 @@ package game
 
 import (
 	"context"
-	gamev1 "gen/game/v1"
 	"matchmaking/internal/domain"
+
+	gamev1 "gen/game/v1"
 )
 
 type Client struct {

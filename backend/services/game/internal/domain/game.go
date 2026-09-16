@@ -195,6 +195,7 @@ func (g *Game) MoveSANHistoryStrings() []string {
 
 	return history
 }
+
 func (g *Game) PlayerIDStrings() []string {
 	ids := make([]string, len(g.players))
 	for i, p := range g.players {

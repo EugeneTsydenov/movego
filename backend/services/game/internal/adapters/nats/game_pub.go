@@ -28,7 +28,11 @@ func NewGamePublisher(publishFunc otelnats.PublishFunc, logger *slog.Logger) *Ga
 	}
 }
 
-func (p *GamePublisher) PublishGameCreated(ctx context.Context, gameID domain.GameID, playersIDs []domain.PlayerID) error {
+func (p *GamePublisher) PublishGameCreated(
+	ctx context.Context,
+	gameID domain.GameID,
+	playersIDs []domain.PlayerID,
+) error {
 	event := GameCreatedEvent{
 		GameID:     gameID.String(),
 		PlayersIDs: make([]string, 0, len(playersIDs)),

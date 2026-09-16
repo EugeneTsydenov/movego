@@ -5,8 +5,10 @@ import (
 	"time"
 )
 
-const White = "w"
-const Black = "b"
+const (
+	White = "w"
+	Black = "b"
+)
 
 type Player struct {
 	id            PlayerID

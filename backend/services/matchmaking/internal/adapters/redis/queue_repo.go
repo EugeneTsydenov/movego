@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
-
 	"matchmaking/internal/domain"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )

@@ -15,7 +15,11 @@ type GameJetStreamSub struct {
 	cancel  context.CancelFunc
 }
 
-func NewGameJetStreamSub(js jetstream.JetStream, handler otelnats.MessageHanler, logger *slog.Logger) *GameJetStreamSub {
+func NewGameJetStreamSub(
+	js jetstream.JetStream,
+	handler otelnats.MessageHanler,
+	logger *slog.Logger,
+) *GameJetStreamSub {
 	return &GameJetStreamSub{
 		js:      js,
 		handler: handler,
@@ -51,7 +55,14 @@ func (s *GameJetStreamSub) Start(ctx context.Context) error {
 		}
 
 		if err := msg.Ack(); err != nil {
-			s.logger.ErrorContext(subCtx, "failed to jetsream message", "subject", msg.Subject(), "err", err)
+			s.logger.ErrorContext(
+				subCtx,
+				"failed to jetsream message",
+				"subject",
+				msg.Subject(),
+				"err",
+				err,
+			)
 		}
 	})
 	if err != nil {

@@ -19,6 +19,7 @@ func newRoom(roomID string) *room {
 		clients: make(map[string]*client),
 	}
 }
+
 func (r *room) RoomID() string {
 	return r.roomID
 }
@@ -56,6 +57,7 @@ func (r *room) Client(clientID string) (*client, error) {
 	if !ok {
 		return nil, fmt.Errorf("client is not exists")
 	}
+
 	return client, nil
 }
 
@@ -80,7 +82,9 @@ func (r *room) IsAllConnected() bool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	if len(r.clients) < 2 {
+	cntClients := 2
+
+	if len(r.clients) < cntClients {
 		return false
 	}
 
@@ -100,6 +104,7 @@ func (r *room) IsConnected(clientID string) bool {
 	if !ok {
 		return false
 	}
+
 	return c.IsOnline()
 }
 
@@ -140,7 +145,6 @@ func (r *room) BroadcastToClients(ctx context.Context, msg []byte) error {
 	r.mu.RUnlock()
 
 	for _, c := range clientsList {
-		// TODO:
 		_ = c.Send(ctx, msg)
 	}
 
