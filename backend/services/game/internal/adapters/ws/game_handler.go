@@ -50,20 +50,45 @@ func (h *GameHandler) Handle(mux *http.ServeMux) {
 }
 
 func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	userID, gameID, ok := h.parseRequest(w, r)
+	if !ok {
+		return
+	}
+	game, ok := h.fetchGameState(w, r, gameID, userID)
+	if !ok {
+		return
+	}
+	conn, ok := h.acceptWebSocket(w, r, userID)
+	if !ok {
+		return
+	}
+	h.runSession(conn, gameID, userID, game)
+}
+
+func (h *GameHandler) parseRequest(w http.ResponseWriter, r *http.Request) (domain.PlayerID, domain.GameID, bool) {
 	userID, err := domain.NewPlayerID(r.Header.Get("X-User-ID"))
 	if err != nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 
-		return
+		return domain.PlayerID{}, domain.GameID{}, false
 	}
 
 	gameID, err := domain.NewGameID(r.URL.Query().Get("game_id"))
 	if err != nil {
 		http.Error(w, "invalid game_id format", http.StatusBadRequest)
 
-		return
+		return domain.PlayerID{}, domain.GameID{}, false
 	}
 
+	return userID, gameID, true
+}
+
+func (h *GameHandler) fetchGameState(
+	w http.ResponseWriter,
+	r *http.Request,
+	gameID domain.GameID,
+	userID domain.PlayerID,
+) (*domain.Game, bool) {
 	game, err := h.gameService.GetState(r.Context(), gameID, userID)
 	if err != nil {
 		msg, code := toHTTPError(err)
@@ -71,26 +96,41 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.logger.WarnContext(
 				r.Context(),
 				"failed to get game state",
-				"game_id",
-				gameID,
-				"user_id",
-				userID,
+				"game_id", gameID,
+				"user_id", userID,
 			)
 		}
 		http.Error(w, msg, code)
 
-		return
+		return nil, false
 	}
 
+	return game, true
+}
+
+func (h *GameHandler) acceptWebSocket(
+	w http.ResponseWriter,
+	r *http.Request,
+	userID domain.PlayerID,
+) (*websocket.Conn, bool) {
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		OriginPatterns: []string{"*"},
 	})
 	if err != nil {
 		h.logger.WarnContext(r.Context(), "failed to accept websocket", "user_id", userID, "err", err)
 
-		return
+		return nil, false
 	}
 
+	return conn, true
+}
+
+func (h *GameHandler) runSession(
+	conn *websocket.Conn,
+	gameID domain.GameID,
+	userID domain.PlayerID,
+	game *domain.Game,
+) {
 	sessionID := uuid.Must(uuid.NewV7())
 	client := wsclient.New(conn)
 
@@ -113,7 +153,7 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.manager.CreateRoom(gameID.String(), game.PlayerIDStrings(), onTimeout)
 
-	err = h.manager.OnClientConnect(bgCtx, onClientConnectArgs{
+	err := h.manager.OnClientConnect(bgCtx, onClientConnectArgs{
 		roomID:    gameID.String(),
 		clientID:  userID.String(),
 		sessionID: sessionID.String(),
@@ -125,12 +165,9 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.logger.WarnContext(
 			bgCtx,
 			"failed to connect player",
-			"user_id",
-			userID,
-			"game_id",
-			gameID,
-			"err",
-			err,
+			"user_id", userID,
+			"game_id", gameID,
+			"err", err,
 		)
 		_ = conn.Close(websocket.StatusInternalError, "failed to join room")
 
