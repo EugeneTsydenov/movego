@@ -81,7 +81,7 @@ func (m *GameManager) OnClientConnect(
 		return fmt.Errorf("room is not exists")
 	}
 
-	room.ConnectClient(connectClientArgs{
+	room.Connect(connectClientArgs{
 		clientID:  args.clientID,
 		sessionID: args.sessionID,
 		wsClient:  args.wsClient,
@@ -107,7 +107,7 @@ func (m *GameManager) DisconnectClient(args managerDisconnectClientArgs) {
 	if !ok {
 		return
 	}
-	room.DisconnectClient(disconnectClientArgs{
+	room.Disconnect(disconnectClientArgs{
 		clientID:  args.clientID,
 		sessionID: args.sessionID,
 		onDisconn: args.onDisconn,
@@ -123,10 +123,14 @@ func (m *GameManager) SendToClient(ctx context.Context, args sendToClientArgs) e
 		return fmt.Errorf("room is not exists")
 	}
 
-	return room.SendToClient(ctx, args.clientID, args.msg)
+	return room.Send(ctx, args.clientID, args.msg)
 }
 
-func (m *GameManager) BroadcastToClients(ctx context.Context, roomID string, msg []byte) error {
+func (m *GameManager) Broadcast(
+	ctx context.Context,
+	roomID string,
+	msg []byte,
+) error {
 	m.mu.RLock()
 	room, ok := m.rooms[roomID]
 	m.mu.RUnlock()
@@ -134,7 +138,23 @@ func (m *GameManager) BroadcastToClients(ctx context.Context, roomID string, msg
 		return fmt.Errorf("room is not exists")
 	}
 
-	return room.BroadcastToClients(ctx, msg)
+	return room.Broadcast(ctx, msg)
+}
+
+func (m *GameManager) BroadcastExcept(
+	ctx context.Context,
+	roomID string,
+	clientID string,
+	msg []byte,
+) error {
+	m.mu.RLock()
+	room, ok := m.rooms[roomID]
+	m.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("room is not exists")
+	}
+
+	return room.BroadcastExcept(ctx, clientID, msg)
 }
 
 func (m *GameManager) GetClient(roomID, clientID string) (*client, error) {

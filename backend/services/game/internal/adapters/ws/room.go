@@ -79,7 +79,7 @@ func (r *room) Client(clientID string) (*client, error) {
 	return client, nil
 }
 
-func (r *room) ConnectClient(args connectClientArgs) {
+func (r *room) Connect(args connectClientArgs) {
 	r.mu.Lock()
 	client, ok := r.clients[args.clientID]
 	if !ok {
@@ -131,7 +131,7 @@ func (r *room) IsConnected(clientID string) bool {
 	return c.IsOnline()
 }
 
-func (r *room) DisconnectClient(args disconnectClientArgs) {
+func (r *room) Disconnect(args disconnectClientArgs) {
 	r.mu.RLock()
 	client, ok := r.clients[args.clientID]
 	r.mu.RUnlock()
@@ -142,7 +142,7 @@ func (r *room) DisconnectClient(args disconnectClientArgs) {
 	_ = client.Disconnect(args.sessionID, args.onDisconn, args.onTimeout)
 }
 
-func (r *room) SendToClient(ctx context.Context, clientID string, msg []byte) error {
+func (r *room) Send(ctx context.Context, clientID string, msg []byte) error {
 	r.mu.RLock()
 	client, ok := r.clients[clientID]
 	r.mu.RUnlock()
@@ -154,10 +154,32 @@ func (r *room) SendToClient(ctx context.Context, clientID string, msg []byte) er
 	return client.Send(ctx, msg)
 }
 
-func (r *room) BroadcastToClients(ctx context.Context, msg []byte) error {
+func (r *room) Broadcast(ctx context.Context, msg []byte) error {
 	r.mu.RLock()
 	clientsList := make([]*client, 0, len(r.clients))
 	for _, c := range r.clients {
+		clientsList = append(clientsList, c)
+	}
+	r.mu.RUnlock()
+
+	for _, c := range clientsList {
+		_ = c.Send(ctx, msg)
+	}
+
+	return nil
+}
+
+func (r *room) BroadcastExcept(
+	ctx context.Context,
+	clientID string,
+	msg []byte,
+) error {
+	r.mu.RLock()
+	clientsList := make([]*client, 0, len(r.clients))
+	for _, c := range r.clients {
+		if c.ID() == clientID {
+			continue
+		}
 		clientsList = append(clientsList, c)
 	}
 	r.mu.RUnlock()

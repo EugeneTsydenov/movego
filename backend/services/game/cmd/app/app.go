@@ -12,12 +12,15 @@ import (
 	"shared/otelnats"
 	"shared/telemetry"
 
-	"buf.build/go/protovalidate"
 	grpcadapter "game/internal/adapters/grpc"
 	natsadapter "game/internal/adapters/nats"
 	redisadapter "game/internal/adapters/redis"
 
+	"buf.build/go/protovalidate"
+
 	gamev1 "gen/game/v1"
+	sharedinterceptor "shared/interceptor"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/redis/go-redis/v9"
@@ -26,7 +29,6 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	sharedinterceptor "shared/interceptor"
 
 	sharedredis "shared/redis"
 )

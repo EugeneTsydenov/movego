@@ -34,6 +34,7 @@ type Game struct {
 
 func NewGame(players []*Player, timeControl TimeControl) *Game {
 	now := time.Now().UTC()
+
 	return &Game{
 		id:            GameID(uuid.Must(uuid.NewV7())),
 		Game:          chess.NewGame(),
@@ -147,13 +148,19 @@ func (g *Game) EnsurePlayer(id PlayerID) error {
 	if !g.IsPlayer(id) {
 		return ErrPlayerNotInGame
 	}
+
 	return nil
 }
 
-func (g *Game) Start(now time.Time) {
+func (g *Game) Start(now time.Time) error {
+	if g.status == StatusInProgress {
+		return ErrGameAlreadyStarted
+	}
 	g.status = StatusInProgress
 	g.turnStartedAt = now
 	g.updatedAt = now
+
+	return nil
 }
 
 func (g *Game) IsClockRunning() bool {

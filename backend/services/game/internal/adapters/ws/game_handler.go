@@ -18,7 +18,7 @@ import (
 
 type GameService interface {
 	GetState(ctx context.Context, gameID domain.GameID, playerID domain.PlayerID) (*domain.Game, error)
-	StartGame(ctx context.Context, gameID domain.GameID, now time.Time) error
+	StartGame(ctx context.Context, gameID domain.GameID, now time.Time) (*domain.Game, error)
 	MakeMove(
 		ctx context.Context,
 		gameID domain.GameID,
@@ -239,22 +239,32 @@ func (h *GameHandler) makeOnConnection(gameID string) onConn {
 			return err
 		}
 
-		return h.manager.BroadcastToClients(context.Background(), gameID, msg)
+		return h.manager.BroadcastExcept(context.Background(), gameID, clientID, msg)
 	}
 }
 
 func (h *GameHandler) makeOnStart(gameID domain.GameID) onStart {
 	return func(ctx context.Context) error {
-		err := h.gameService.StartGame(ctx, gameID, time.Now())
-		if err != nil {
-			return err
-		}
-		msg, err := json.Marshal(toStartEvent())
+		game, err := h.gameService.StartGame(ctx, gameID, time.Now())
 		if err != nil {
 			return err
 		}
 
-		return h.manager.BroadcastToClients(context.Background(), gameID.String(), msg)
+		startEventMsg, err := json.Marshal(toStartEvent())
+		if err != nil {
+			return err
+		}
+
+		roomStateMsg, err := json.Marshal(toRoomStateEvent(game))
+		if err != nil {
+			return err
+		}
+
+		if err := h.manager.Broadcast(context.Background(), gameID.String(), startEventMsg); err != nil {
+			return err
+		}
+
+		return h.manager.Broadcast(context.Background(), gameID.String(), roomStateMsg)
 	}
 }
 
@@ -264,7 +274,7 @@ func (h *GameHandler) makeOnDisconnect(gameID string) onDisconn {
 		if err != nil {
 			return err
 		}
-		_ = h.manager.BroadcastToClients(context.Background(), gameID, msg)
+		_ = h.manager.BroadcastExcept(context.Background(), gameID, client.ID(), msg)
 
 		return nil
 	}
@@ -277,7 +287,7 @@ func (h *GameHandler) makeOnTimeout(gameID string) onTimeout {
 			return nil
 		}
 
-		_ = h.manager.BroadcastToClients(context.Background(), gameID, msg)
+		_ = h.manager.BroadcastExcept(context.Background(), gameID, clientID, msg)
 
 		return nil
 	}

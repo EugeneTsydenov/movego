@@ -53,6 +53,7 @@ func (s *GameService) CreateGame(ctx context.Context, in CreateGameInput) error 
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -69,19 +70,25 @@ func (s *GameService) GetState(
 	return game, nil
 }
 
-func (s *GameService) StartGame(ctx context.Context, gameID domain.GameID, now time.Time) error {
+func (s *GameService) StartGame(
+	ctx context.Context,
+	gameID domain.GameID,
+	now time.Time,
+) (*domain.Game, error) {
 	game, err := s.gameRepo.GetByID(ctx, gameID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	game.Start(now)
+	if err := game.Start(now); err != nil {
+		return nil, err
+	}
 
 	if err := s.gameRepo.Save(ctx, game); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return game, nil
 }
 
 func (s *GameService) MakeMove(
