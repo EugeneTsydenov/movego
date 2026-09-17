@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type (
+	onConn    func(ctx context.Context, clientID string) error
+	onDisconn func(ctx context.Context, client *client) error
+	onTimeout func(ctx context.Context, clientID string) error
+)
+
 type client struct {
 	mu               sync.RWMutex
 	id               string
@@ -61,7 +67,7 @@ func (c *client) DisconnExpiresAt() time.Time {
 func (c *client) Connect(
 	sessionID string,
 	wsClient *wsclient.Client,
-	onConn func(ctx context.Context, clientID string) error,
+	onConn onConn,
 ) error {
 	c.mu.Lock()
 	c.sessionID = sessionID
@@ -83,7 +89,9 @@ func (c *client) Connect(
 	return nil
 }
 
-func (c *client) StartInitialTimeout(onTimeout func(ctx context.Context, clientID string) error) {
+func (c *client) StartInitialTimeout(
+	onTimeout onTimeout,
+) {
 	c.mu.Lock()
 	c.wsClient = nil
 	c.isOnline = false
@@ -94,7 +102,14 @@ func (c *client) StartInitialTimeout(onTimeout func(ctx context.Context, clientI
 		c.connTimer.Stop()
 	}
 
-	c.connTimer = time.AfterFunc(1*time.Minute, func() {
+	c.connTimer = c.initConnTimer(onTimeout)
+	c.mu.Unlock()
+}
+
+func (c *client) initConnTimer(
+	onTimeout onTimeout,
+) *time.Timer {
+	return time.AfterFunc(1*time.Minute, func() {
 		if c.IsOnline() || !c.TimeoutActive() {
 			return
 		}
@@ -103,13 +118,12 @@ func (c *client) StartInitialTimeout(onTimeout func(ctx context.Context, clientI
 			_ = onTimeout(context.Background(), c.ID())
 		}
 	})
-	c.mu.Unlock()
 }
 
 func (c *client) Disconnect(
 	sessionID string,
-	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context, clientID string) error,
+	onDisconn onDisconn,
+	onTimeout onTimeout,
 ) error {
 	c.mu.Lock()
 
@@ -129,15 +143,7 @@ func (c *client) Disconnect(
 		c.connTimer.Stop()
 	}
 
-	c.connTimer = time.AfterFunc(1*time.Minute, func() {
-		if c.IsOnline() || !c.TimeoutActive() {
-			return
-		}
-
-		if onTimeout != nil {
-			_ = onTimeout(context.Background(), c.ID())
-		}
-	})
+	c.connTimer = c.initConnTimer(onTimeout)
 	c.mu.Unlock()
 
 	if ws != nil {

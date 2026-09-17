@@ -5,13 +5,31 @@ import (
 	"fmt"
 	"shared/wsclient"
 	"sync"
-	"time"
 )
 
-type playerConnStatus struct {
-	IsOnline         bool
-	TimeoutActive    bool
-	TimeoutExpiresAt *time.Time
+type onStart func(ctx context.Context) error
+
+type onClientConnectArgs struct {
+	roomID    string
+	clientID  string
+	sessionID string
+	wsClient  *wsclient.Client
+	onConn    onConn
+	onStart   onStart
+}
+
+type managerDisconnectClientArgs struct {
+	roomID    string
+	clientID  string
+	sessionID string
+	onDisconn onDisconn
+	onTimeout onTimeout
+}
+
+type sendToClientArgs struct {
+	roomID   string
+	clientID string
+	msg      []byte
 }
 
 type GameManager struct {
@@ -37,7 +55,7 @@ func (m *GameManager) isRoomCreated(roomID string) bool {
 func (m *GameManager) CreateRoom(
 	roomID string,
 	clientIDs []string,
-	onTimeout func(ctx context.Context, clientID string) error,
+	onTimeout onTimeout,
 ) {
 	if m.isRoomCreated(roomID) {
 		return
@@ -58,24 +76,24 @@ func (m *GameManager) CreateRoom(
 	room.TimeoutAll(onTimeout)
 }
 
-func (m *GameManager) OnPlayerConnect(
+func (m *GameManager) OnClientConnect(
 	ctx context.Context,
-	roomID,
-	clientID string,
-	sessionId string,
-	wsClient *wsclient.Client,
-	onConn func(ctx context.Context, clientID string) error,
-	onStart func(ctx context.Context) error,
+	args onClientConnectArgs,
 ) error {
 	m.mu.RLock()
-	room, ok := m.rooms[roomID]
+	room, ok := m.rooms[args.roomID]
 	m.mu.RUnlock()
 	if !ok {
 		return fmt.Errorf("room is not exists")
 	}
-	room.ConnectClient(clientID, sessionId, wsClient, onConn)
+	room.ConnectClient(connectClientArgs{
+		clientID:  args.clientID,
+		sessionID: args.sessionID,
+		wsClient:  args.wsClient,
+		onConn:    args.onConn,
+	})
 	if room.IsAllConnected() {
-		err := onStart(ctx)
+		err := args.onStart(ctx)
 		if err != nil {
 			return err
 		}
@@ -84,32 +102,31 @@ func (m *GameManager) OnPlayerConnect(
 	return nil
 }
 
-func (m *GameManager) DisconnectClient(
-	roomID,
-	clientID string,
-	sessionID string,
-	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context, clientID string) error,
-) {
+func (m *GameManager) DisconnectClient(args managerDisconnectClientArgs) {
 	m.mu.RLock()
-	room, ok := m.rooms[roomID]
+	room, ok := m.rooms[args.roomID]
 	m.mu.RUnlock()
 
 	if !ok {
 		return
 	}
-	room.DisconnectClient(clientID, sessionID, onDisconn, onTimeout)
+	room.DisconnectClient(disconnectClientArgs{
+		clientID:  args.clientID,
+		sessionID: args.sessionID,
+		onDisconn: args.onDisconn,
+		onTimeout: args.onTimeout,
+	})
 }
 
-func (m *GameManager) SendToClient(ctx context.Context, roomID, clientID string, msg []byte) error {
+func (m *GameManager) SendToClient(ctx context.Context, args sendToClientArgs) error {
 	m.mu.RLock()
-	room, ok := m.rooms[roomID]
+	room, ok := m.rooms[args.roomID]
 	m.mu.RUnlock()
 	if !ok {
 		return fmt.Errorf("room is not exists")
 	}
 
-	return room.SendToClient(ctx, clientID, msg)
+	return room.SendToClient(ctx, args.clientID, args.msg)
 }
 
 func (m *GameManager) BroadcastToClients(ctx context.Context, roomID string, msg []byte) error {

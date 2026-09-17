@@ -7,6 +7,20 @@ import (
 	"sync"
 )
 
+type connectClientArgs struct {
+	clientID  string
+	sessionID string
+	wsClient  *wsclient.Client
+	onConn    onConn
+}
+
+type disconnectClientArgs struct {
+	clientID  string
+	sessionID string
+	onDisconn onDisconn
+	onTimeout onTimeout
+}
+
 type room struct {
 	mu      sync.RWMutex
 	roomID  string
@@ -36,7 +50,7 @@ func (r *room) AddClients(clientIDs []string) {
 }
 
 func (r *room) TimeoutAll(
-	onTimeout func(ctx context.Context, clientID string) error,
+	onTimeout onTimeout,
 ) {
 	r.mu.Lock()
 	clientsList := make([]*client, 0, len(r.clients))
@@ -61,21 +75,16 @@ func (r *room) Client(clientID string) (*client, error) {
 	return client, nil
 }
 
-func (r *room) ConnectClient(
-	clientID string,
-	sessionID string,
-	wsClient *wsclient.Client,
-	onConn func(ctx context.Context, clientID string) error,
-) {
+func (r *room) ConnectClient(args connectClientArgs) {
 	r.mu.Lock()
-	client, ok := r.clients[clientID]
+	client, ok := r.clients[args.clientID]
 	if !ok {
-		client = newClient(clientID)
-		r.clients[clientID] = client
+		client = newClient(args.clientID)
+		r.clients[args.clientID] = client
 	}
 	r.mu.Unlock()
 
-	client.Connect(sessionID, wsClient, onConn)
+	client.Connect(args.sessionID, args.wsClient, args.onConn)
 }
 
 func (r *room) IsAllConnected() bool {
@@ -108,20 +117,15 @@ func (r *room) IsConnected(clientID string) bool {
 	return c.IsOnline()
 }
 
-func (r *room) DisconnectClient(
-	clientID string,
-	sessionID string,
-	onDisconn func(ctx context.Context, client *client) error,
-	onTimeout func(ctx context.Context, clientID string) error,
-) {
+func (r *room) DisconnectClient(args disconnectClientArgs) {
 	r.mu.RLock()
-	client, ok := r.clients[clientID]
+	client, ok := r.clients[args.clientID]
 	r.mu.RUnlock()
 
 	if !ok {
 		return
 	}
-	_ = client.Disconnect(sessionID, onDisconn, onTimeout)
+	_ = client.Disconnect(args.sessionID, args.onDisconn, args.onTimeout)
 }
 
 func (r *room) SendToClient(ctx context.Context, clientID string, msg []byte) error {

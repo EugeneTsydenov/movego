@@ -103,19 +103,24 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	onDisconn := h.makeOnDisconnect(gameID.String())
 	onTimeout := h.makeOnTimeout(gameID.String())
 
-	defer h.manager.DisconnectClient(gameID.String(), userID.String(), sessionID.String(), onDisconn, onTimeout)
+	defer h.manager.DisconnectClient(managerDisconnectClientArgs{
+		roomID:    gameID.String(),
+		clientID:  userID.String(),
+		sessionID: sessionID.String(),
+		onDisconn: onDisconn,
+		onTimeout: onTimeout,
+	})
 
 	h.manager.CreateRoom(gameID.String(), game.PlayerIDStrings(), onTimeout)
 
-	err = h.manager.OnPlayerConnect(
-		bgCtx,
-		gameID.String(),
-		userID.String(),
-		sessionID.String(),
-		client,
-		onConn,
-		onStart,
-	)
+	err = h.manager.OnClientConnect(bgCtx, onClientConnectArgs{
+		roomID:    gameID.String(),
+		clientID:  userID.String(),
+		sessionID: sessionID.String(),
+		wsClient:  client,
+		onConn:    onConn,
+		onStart:   onStart,
+	})
 	if err != nil {
 		h.logger.WarnContext(
 			bgCtx,
@@ -132,11 +137,21 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.serveClientMessages(bgCtx, conn, client, gameID, userID)
+}
+
+func (h *GameHandler) serveClientMessages(
+	ctx context.Context,
+	conn *websocket.Conn,
+	client *wsclient.Client,
+	gameID domain.GameID,
+	userID domain.PlayerID,
+) {
 	for {
-		msgType, data, err := conn.Read(bgCtx)
+		msgType, data, err := conn.Read(ctx)
 		if err != nil {
 			h.logger.InfoContext(
-				bgCtx,
+				ctx,
 				"failed to read from websocket",
 				"user_id",
 				userID,
@@ -153,9 +168,9 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if err := h.handleClientMessage(bgCtx, gameID, userID, data); err != nil {
+		if err := h.handleClientMessage(ctx, gameID, userID, data); err != nil {
 			h.logger.WarnContext(
-				bgCtx,
+				ctx,
 				"failed to handle client message",
 				"user_id",
 				userID,
@@ -175,12 +190,12 @@ func (h *GameHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"type": "error",
 				"code": toWsErrorCode(err),
 			})
-			_ = client.Send(bgCtx, errorResp)
+			_ = client.Send(ctx, errorResp)
 		}
 	}
 }
 
-func (h *GameHandler) makeOnConnection(gameID string) func(ctx context.Context, clientID string) error {
+func (h *GameHandler) makeOnConnection(gameID string) onConn {
 	return func(ctx context.Context, clientID string) error {
 		msg, err := json.Marshal(toConnectEvent(clientID))
 		if err != nil {
@@ -191,7 +206,7 @@ func (h *GameHandler) makeOnConnection(gameID string) func(ctx context.Context, 
 	}
 }
 
-func (h *GameHandler) makeOnStart(gameID domain.GameID) func(ctx context.Context) error {
+func (h *GameHandler) makeOnStart(gameID domain.GameID) onStart {
 	return func(ctx context.Context) error {
 		err := h.gameService.StartGame(ctx, gameID, time.Now())
 		if err != nil {
@@ -206,7 +221,7 @@ func (h *GameHandler) makeOnStart(gameID domain.GameID) func(ctx context.Context
 	}
 }
 
-func (h *GameHandler) makeOnDisconnect(gameID string) func(ctx context.Context, client *client) error {
+func (h *GameHandler) makeOnDisconnect(gameID string) onDisconn {
 	return func(ctx context.Context, client *client) error {
 		msg, err := json.Marshal(toDisconnectEvent(client.ID(), client.DisconnExpiresAt()))
 		if err != nil {
@@ -218,7 +233,7 @@ func (h *GameHandler) makeOnDisconnect(gameID string) func(ctx context.Context, 
 	}
 }
 
-func (h *GameHandler) makeOnTimeout(gameID string) func(ctx context.Context, clientID string) error {
+func (h *GameHandler) makeOnTimeout(gameID string) onTimeout {
 	return func(ctx context.Context, clientID string) error {
 		msg, err := json.Marshal(toTimeoutEvent(clientID))
 		if err != nil {
