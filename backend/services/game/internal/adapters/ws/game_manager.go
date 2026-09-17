@@ -57,23 +57,17 @@ func (m *GameManager) CreateRoom(
 	clientIDs []string,
 	onTimeout onTimeout,
 ) {
-	if m.isRoomCreated(roomID) {
-		return
-	}
-
 	m.mu.Lock()
-	if _, ok := m.rooms[roomID]; ok {
-		m.mu.Unlock()
+	defer m.mu.Unlock()
 
+	if _, exists := m.rooms[roomID]; exists {
 		return
 	}
 
 	room := newRoom(roomID)
-	m.rooms[roomID] = room
-	m.mu.Unlock()
-
 	room.AddClients(clientIDs)
 	room.TimeoutAll(onTimeout)
+	m.rooms[roomID] = room
 }
 
 func (m *GameManager) OnClientConnect(
