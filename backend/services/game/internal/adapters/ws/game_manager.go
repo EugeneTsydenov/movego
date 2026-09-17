@@ -86,15 +86,18 @@ func (m *GameManager) OnClientConnect(
 	if !ok {
 		return fmt.Errorf("room is not exists")
 	}
+
 	room.ConnectClient(connectClientArgs{
 		clientID:  args.clientID,
 		sessionID: args.sessionID,
 		wsClient:  args.wsClient,
 		onConn:    args.onConn,
 	})
-	if room.IsAllConnected() {
-		err := args.onStart(ctx)
-		if err != nil {
+
+	if room.TryStart() {
+		if err := args.onStart(ctx); err != nil {
+			room.UnmarkStarted()
+
 			return err
 		}
 	}

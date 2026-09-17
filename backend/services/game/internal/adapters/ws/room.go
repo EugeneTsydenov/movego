@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+const requiredPlayers = 2
+
 type connectClientArgs struct {
 	clientID  string
 	sessionID string
@@ -25,6 +27,8 @@ type room struct {
 	mu      sync.RWMutex
 	roomID  string
 	clients map[string]*client
+
+	started bool
 }
 
 func newRoom(roomID string) *room {
@@ -87,13 +91,15 @@ func (r *room) ConnectClient(args connectClientArgs) {
 	client.Connect(args.sessionID, args.wsClient, args.onConn)
 }
 
-func (r *room) IsAllConnected() bool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (r *room) TryStart() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-	cntClients := 2
+	if r.started {
+		return false
+	}
 
-	if len(r.clients) < cntClients {
+	if len(r.clients) < requiredPlayers {
 		return false
 	}
 
@@ -103,7 +109,15 @@ func (r *room) IsAllConnected() bool {
 		}
 	}
 
+	r.started = true
+
 	return true
+}
+
+func (r *room) UnmarkStarted() {
+	r.mu.Lock()
+	r.started = false
+	r.mu.Unlock()
 }
 
 func (r *room) IsConnected(clientID string) bool {
