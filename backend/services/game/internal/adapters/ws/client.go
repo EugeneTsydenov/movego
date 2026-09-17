@@ -40,6 +40,9 @@ func (c *client) ID() string {
 }
 
 func (c *client) SessionID() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	return c.sessionID
 }
 
